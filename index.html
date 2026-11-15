@@ -441,7 +441,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
   pointer-events:none;touch-action:pan-y;-webkit-overflow-scrolling:touch;
 }
 #scroll-container.interactive{pointer-events:auto;}
-#scroll-height{height:900vh;width:100%;}
+#scroll-height{height:1800vh;width:100%;}
 
 /* ═══════════════════════════════════════════
    2D FALLBACK (No WebGL)
@@ -1158,7 +1158,7 @@ const springs = {
   curtainOpen:   new Spring(0, { stiffness: 22, damping: 9, mass: 1.8 }),
   cameraFly:     new Spring(0, { stiffness: 24, damping: 12, mass: 2.0 }),
   spotlightPower: new Spring(0, { stiffness: 140, damping: 14 }),
-  scrollLerp:    new Spring(0, { stiffness: 24, damping: 18 })
+  scrollLerp:    new Spring(0, { stiffness: 14, damping: 22 })
 };
 
 // State Machine
@@ -2351,11 +2351,11 @@ function init() {
     // Check if on Cast Chapter and doing a horizontal swipe -> rotate sphere
     const curP = springs.scrollLerp.value;
     if (curP > 0.40 && curP < 0.72 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-      sphereRotationOffset.y += -dx * 0.005;
-      sphereRotationOffset.x += dy * 0.0025;
+      sphereRotationOffset.y += -dx * 0.004;
+      sphereRotationOffset.x += dy * 0.002;
     } else {
-      // Gentle, cinematic mobile vertical swipe (tuned for mobile pacing)
-      $scrollContainer.scrollTop += dy * 0.65;
+      // Slow, relaxed, cinematic mobile swipe pacing (tuned for thorough viewing)
+      $scrollContainer.scrollTop += dy * 0.28;
     }
   }, { passive: true });
 
@@ -2363,18 +2363,24 @@ function init() {
     if (!isMobileTouching) return;
     isMobileTouching = false;
 
-    // Gentle mobile touch momentum / inertia physics (slowed down for readability)
+    // Minimal, ultra-gentle coast that stops quickly so chapters stay firmly in view
     if (currentState === STATE.SCROLL_WORLD && Math.abs(touchVelocityY) > 2) {
-      let vel = touchVelocityY * 0.45;
+      let vel = touchVelocityY * 0.15;
       const decay = () => {
-        if (Math.abs(vel) < 0.3 || isMobileTouching) return;
+        if (Math.abs(vel) < 0.2 || isMobileTouching) return;
         $scrollContainer.scrollTop += vel;
-        vel *= 0.88;
+        vel *= 0.82;
         touchAnimFrame = requestAnimationFrame(decay);
       };
       touchAnimFrame = requestAnimationFrame(decay);
     }
   }, { passive: true });
+
+  // Damp desktop trackpad/wheel as well for matching pacing
+  $scrollContainer.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    $scrollContainer.scrollTop += e.deltaY * 0.35;
+  }, { passive: false });
 
   // Tap-to-advance on scroll hint
   const $scrollHint = document.querySelector('.scroll-hint');
