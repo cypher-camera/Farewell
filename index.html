@@ -1168,10 +1168,10 @@ const springs = {
   sealBreak:     new Spring(0, { stiffness: 280, damping: 10 }),
   ticketSlide:   new Spring(0, { stiffness: 110, damping: 12 }),
   ticketFlip:    new Spring(0, { stiffness: 80, damping: 12, mass: 1.4 }),
-  curtainOpen:   new Spring(0, { stiffness: 22, damping: 9, mass: 1.8 }),
-  cameraFly:     new Spring(0, { stiffness: 24, damping: 12, mass: 2.0 }),
+  curtainOpen:   new Spring(0, { stiffness: 9, damping: 7, mass: 2.6 }),
+  cameraFly:     new Spring(0, { stiffness: 10, damping: 9, mass: 2.4 }),
   spotlightPower: new Spring(0, { stiffness: 140, damping: 14 }),
-  scrollLerp:    new Spring(0, { stiffness: 14, damping: 22 })
+  scrollLerp:    new Spring(0, { stiffness: 32, damping: 16 })
 };
 
 // State Machine
@@ -1953,18 +1953,18 @@ function transitionTo(state) {
       curtainGroup.visible = true;
       envelopeGroup.visible = false;
 
-      // Curtains smoothly part wide
+      // Curtains smoothly part wide with majestic theatrical pacing
       springs.curtainOpen.set(1);
 
-      // Allow user to witness the parting curtains, then camera glides through into Lobby
+      // Allow user to witness the heavy velvet curtains parting, then glide camera through
       setTimeout(() => {
         springs.cameraFly.set(1);
-      }, 1000);
+      }, 1800);
 
-      // Once camera reaches Lobby at Z = 10, enter Scroll World
+      // Once camera arrives smoothly into Lobby, enter Scroll World
       setTimeout(() => {
         transitionTo(STATE.SCROLL_WORLD);
-      }, 3400);
+      }, 4800);
       break;
 
     case STATE.SCROLL_WORLD:
@@ -2045,7 +2045,24 @@ function onPointerDown(e) {
     const hits = raycaster.intersectObject(ticketGroup, true);
     if (hits.length > 0) transitionTo(STATE.TICKET_FLIPPED);
   } else if (currentState === STATE.SCROLL_WORLD) {
-    const hits = raycaster.intersectObjects(interactiveObjects, true);
+    const curP = springs.scrollLerp.value;
+    const isCastChapter = (curP >= 0.26 && curP < 0.72);
+    const isDirectorChapter = (curP >= 0.70);
+
+    // Strictly filter interactive candidates to only currently visible chapter
+    const activeCandidates = interactiveObjects.filter(obj => {
+      let pObj = obj;
+      while (pObj && pObj !== scene) {
+        if (pObj.visible === false) return false;
+        pObj = pObj.parent;
+      }
+      const isTeacher = (obj.userData && obj.userData.type === 'teacher');
+      if (isCastChapter && isTeacher) return false;
+      if (isDirectorChapter && !isTeacher) return false;
+      return true;
+    });
+
+    const hits = raycaster.intersectObjects(activeCandidates, true);
     if (hits.length > 0) {
       let found = null;
       for (let h of hits) {
@@ -2235,8 +2252,13 @@ function animate() {
       }
     });
 
+    // Isolate Cast and Directors in 3D space so they NEVER collide or overlap
+    if (carpetGroup) carpetGroup.visible = (p < 0.46);
+    if (castGroup) castGroup.visible = (p >= 0.26 && p < 0.72);
+    if (directorsGroup) directorsGroup.visible = (p >= 0.70);
+
     // Celestial 3D Sphere Rotation for The Cast
-    if (castSphereGroup) {
+    if (castSphereGroup && castGroup.visible) {
       castSphereGroup.rotation.y = elapsed * 0.18 + sphereRotationOffset.y;
       castSphereGroup.rotation.x = Math.sin(elapsed * 0.35) * 0.08 + sphereRotationOffset.x;
     }
@@ -2406,17 +2428,10 @@ function init() {
   window.addEventListener('touchend', () => {
     if (!isMobileTouching) return;
     isMobileTouching = false;
-
-    // Minimal, ultra-gentle coast that stops quickly so chapters stay firmly in view
-    if (currentState === STATE.SCROLL_WORLD && Math.abs(touchVelocityY) > 2) {
-      let vel = touchVelocityY * 0.15;
-      const decay = () => {
-        if (Math.abs(vel) < 0.2 || isMobileTouching) return;
-        $scrollContainer.scrollTop += vel;
-        vel *= 0.82;
-        touchAnimFrame = requestAnimationFrame(decay);
-      };
-      touchAnimFrame = requestAnimationFrame(decay);
+    // Immediately stop scrolling when finger leaves screen — zero lingering roll
+    if (touchAnimFrame) {
+      cancelAnimationFrame(touchAnimFrame);
+      touchAnimFrame = null;
     }
   }, { passive: true });
 
