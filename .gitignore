@@ -2,3 +2,12 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+*.ps1
+*.bat
+add_rsvp.js
+apply_*.js
+fix_*.js
+process_*.js
+remove_*.js
+update_*.js
+validate.js

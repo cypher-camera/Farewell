@@ -798,14 +798,21 @@ const CONFIG = {
     { file: 'Screenshot_20261114_204434_Instagram~2.jpg',   name: 'Mr Abhilash Kapoor', subject: 'Accountancy', caption: 'Balancing every ledger, guiding every ambition with wisdom' }
   ],
 
-  photoBasePath: '/public/photos/'
+  photoBasePath: './public/photos/'
 };
 
 /* ═══════════════════════════════════════════════════════════════
    SECTION 2 — AUDIO SYNTHESIZER (Web Audio API)
    ═══════════════════════════════════════════════════════════════ */
 class PremiereAudio {
-  constructor() { this.ctx = null; this.muted = true; }
+  constructor() {
+    this.ctx = null;
+    this.muted = false; // Start active so music begins on first user interaction
+    this.bgAudio = new Audio('./public/audio/cheri_cheri_lady.mp3');
+    this.bgAudio.loop = true;
+    this.bgAudio.volume = 0.5;
+    this.hasStarted = false;
+  }
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -813,7 +820,43 @@ class PremiereAudio {
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
   }
-  toggle() { this.init(); this.muted = !this.muted; return !this.muted; }
+  startBgMusic() {
+    this.init();
+    if (!this.muted && this.bgAudio) {
+      const p = this.bgAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          this.hasStarted = true;
+          this.updateUi();
+        }).catch(err => {
+          // Awaiting user gesture
+        });
+      }
+    }
+  }
+  toggle() {
+    this.init();
+    this.muted = !this.muted;
+    if (this.muted) {
+      if (this.bgAudio) this.bgAudio.pause();
+    } else {
+      if (this.bgAudio) {
+        this.bgAudio.play().then(() => {
+          this.hasStarted = true;
+        }).catch(err => console.log('Audio playback error:', err));
+      }
+    }
+    this.updateUi();
+    return !this.muted;
+  }
+  updateUi() {
+    const $soundIconOff = document.getElementById('sound-icon-off');
+    const $soundIconOn = document.getElementById('sound-icon-on');
+    if ($soundIconOff && $soundIconOn) {
+      $soundIconOff.style.display = this.muted ? 'block' : 'none';
+      $soundIconOn.style.display = this.muted ? 'none' : 'block';
+    }
+  }
   playChime(freq = 520, dur = 0.6) {
     if (this.muted || !this.ctx) return;
     try {
@@ -2198,7 +2241,10 @@ function init() {
   });
 
   window.addEventListener('pointerdown', onPointerDown);
-  $enterBtn.addEventListener('click', () => transitionTo(STATE.CURTAINS_PARTING));
+  $enterBtn.addEventListener('click', () => {
+    if (!audio.hasStarted && !audio.muted) audio.startBgMusic();
+    transitionTo(STATE.CURTAINS_PARTING);
+  });
   $skip.addEventListener('click', skipIntro);
   $modalClose.addEventListener('click', closeInspectModal);
   $inspectModal.addEventListener('click', (e) => {
@@ -2209,10 +2255,18 @@ function init() {
   });
 
   $soundBtn.addEventListener('click', () => {
-    const active = audio.toggle();
-    $soundIconOff.style.display = active ? 'none' : 'block';
-    $soundIconOn.style.display = active ? 'block' : 'none';
+    audio.toggle();
   });
+
+  // Start Cheri Cheri Lady on user interaction
+  const unlockPremiereMusic = () => {
+    if (!audio.hasStarted && !audio.muted) {
+      audio.startBgMusic();
+    }
+  };
+  window.addEventListener('click', unlockPremiereMusic, { once: true });
+  window.addEventListener('touchstart', unlockPremiereMusic, { once: true });
+  window.addEventListener('keydown', unlockPremiereMusic, { once: true });
 
   chapBtns.forEach(btn => {
     btn.addEventListener('click', () => {
