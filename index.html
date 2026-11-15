@@ -441,7 +441,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
   pointer-events:none;touch-action:pan-y;-webkit-overflow-scrolling:touch;
 }
 #scroll-container.interactive{pointer-events:auto;}
-#scroll-height{height:500vh;width:100%;}
+#scroll-height{height:900vh;width:100%;}
 
 /* ═══════════════════════════════════════════
    2D FALLBACK (No WebGL)
@@ -1158,7 +1158,7 @@ const springs = {
   curtainOpen:   new Spring(0, { stiffness: 22, damping: 9, mass: 1.8 }),
   cameraFly:     new Spring(0, { stiffness: 24, damping: 12, mass: 2.0 }),
   spotlightPower: new Spring(0, { stiffness: 140, damping: 14 }),
-  scrollLerp:    new Spring(0, { stiffness: 50, damping: 16 })
+  scrollLerp:    new Spring(0, { stiffness: 24, damping: 18 })
 };
 
 // State Machine
@@ -2351,11 +2351,11 @@ function init() {
     // Check if on Cast Chapter and doing a horizontal swipe -> rotate sphere
     const curP = springs.scrollLerp.value;
     if (curP > 0.40 && curP < 0.72 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-      sphereRotationOffset.y += -dx * 0.006;
-      sphereRotationOffset.x += dy * 0.003;
+      sphereRotationOffset.y += -dx * 0.005;
+      sphereRotationOffset.x += dy * 0.0025;
     } else {
-      // Normal mobile vertical swipe -> smoothly scroll scene
-      $scrollContainer.scrollTop += dy * 1.4;
+      // Gentle, cinematic mobile vertical swipe (tuned for mobile pacing)
+      $scrollContainer.scrollTop += dy * 0.65;
     }
   }, { passive: true });
 
@@ -2363,13 +2363,13 @@ function init() {
     if (!isMobileTouching) return;
     isMobileTouching = false;
 
-    // Mobile touch momentum / inertia physics
+    // Gentle mobile touch momentum / inertia physics (slowed down for readability)
     if (currentState === STATE.SCROLL_WORLD && Math.abs(touchVelocityY) > 2) {
-      let vel = touchVelocityY * 1.2;
+      let vel = touchVelocityY * 0.45;
       const decay = () => {
-        if (Math.abs(vel) < 0.5 || isMobileTouching) return;
+        if (Math.abs(vel) < 0.3 || isMobileTouching) return;
         $scrollContainer.scrollTop += vel;
-        vel *= 0.92;
+        vel *= 0.88;
         touchAnimFrame = requestAnimationFrame(decay);
       };
       touchAnimFrame = requestAnimationFrame(decay);
