@@ -144,8 +144,29 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
 #hud>*{pointer-events:auto;}
 
 .hud-top{display:flex;justify-content:space-between;align-items:center;width:100%;}
-.hud-brand{font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;letter-spacing:0.22em;color:var(--gold);text-transform:uppercase;}
-.hud-brand span{color:var(--ivory-muted);font-weight:400;font-size:0.75rem;margin-left:0.6rem;letter-spacing:0.12em;}
+.hud-brand{
+  font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;letter-spacing:0.22em;
+  color:var(--gold);text-transform:uppercase;cursor:pointer;user-select:none;
+  transition:all 0.4s cubic-bezier(0.16,1,0.3,1);display:inline-flex;align-items:center;position:relative;
+}
+.hud-brand span{color:var(--ivory-muted);font-weight:400;font-size:0.75rem;margin-left:0.6rem;letter-spacing:0.12em;transition:opacity 0.3s ease;}
+.hud-brand:hover{opacity:0.92;}
+.hud-brand.god-mode{
+  color:#FFF !important;
+  text-shadow:0 0 10px #FFD700, 0 0 25px #D4AF37, 0 0 40px rgba(255,215,0,0.8);
+  transform:scale(1.05);
+}
+.hud-brand .god-tag{
+  background:linear-gradient(135deg,#D4AF37,#FFF);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  font-weight:900;letter-spacing:0.28em;margin-left:0.5rem;font-size:0.8rem;
+  border:1px solid rgba(212,175,55,0.7);padding:2px 8px;border-radius:4px;
+  box-shadow:0 0 15px rgba(212,175,55,0.4);
+}
+.hud-brand .god-subtitle{
+  color:#FFD700 !important;font-size:0.72rem;letter-spacing:0.18em;margin-left:0.6rem;
+  font-weight:600;opacity:0.95;
+}
 
 .hud-chapters{
   display:flex;gap:0.4rem;background:rgba(11,11,15,0.85);
@@ -483,7 +504,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
 <!-- ═══ STAGE 2: HUD & NAVIGATION (z-index 950) ═══ -->
 <div id="hud">
   <div class="hud-top">
-    <div class="hud-brand">Final Cut <span>The Farewell Premiere</span></div>
+    <div class="hud-brand" id="hud-brand" title="Final Cut: The Farewell Premiere">Final Cut <span>The Farewell Premiere</span></div>
     <div class="hud-chapters">
       <button class="chap-btn active" data-chapter="0">Lobby</button>
       <button class="chap-btn" data-chapter="1">Red Carpet</button>
@@ -2444,6 +2465,58 @@ if ($rsvpForm) {
     $rsvpTicketView.classList.add('active');
   });
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   EASTER EGG — THE SUPREME ARCHITECT: ARCHIT (GOD)
+   ═══════════════════════════════════════════════════════════════ */
+const $hudBrand = document.getElementById('hud-brand');
+let brandClickCount = 0;
+let brandClickTimer = null;
+const originalBrandHtml = 'Final Cut <span>The Farewell Premiere</span>';
+const godBrandHtml = 'ARCHIT <span class="god-tag">GOD</span> <span class="god-subtitle">✦ THE ARCHITECT</span>';
+
+if ($hudBrand) {
+  $hudBrand.addEventListener('click', () => {
+    brandClickCount++;
+    clearTimeout(brandClickTimer);
+    
+    // Triple click detection
+    if (brandClickCount >= 3) {
+      brandClickCount = 0;
+      $hudBrand.classList.add('god-mode');
+      $hudBrand.innerHTML = godBrandHtml;
+      
+      if (audio) {
+        audio.playChime(1040, 0.9);
+        setTimeout(() => audio.playChime(1318, 0.8), 120);
+      }
+      
+      console.log(
+        '%c ⚡ ARCHIT (GOD) ⚡ %c The Supreme Architect of Final Cut: The Farewell Premiere %c Class 11 Production • GK Institute Patiala ',
+        'background:linear-gradient(135deg,#D4AF37,#4A0A15); color:#FFF; font-size:16px; font-weight:900; padding:6px 14px; border-radius:4px 0 0 4px; text-shadow:0 0 10px #FFD700;',
+        'background:#0B0B0F; color:#D4AF37; font-size:13px; font-weight:600; padding:6px 12px; border:1px solid #D4AF37;',
+        'background:#1c1813; color:#a89f91; font-size:11px; padding:6px 10px; border-radius:0 4px 4px 0;'
+      );
+
+      // Reverts automatically after 5.5 seconds
+      setTimeout(() => {
+        $hudBrand.classList.remove('god-mode');
+        $hudBrand.innerHTML = originalBrandHtml;
+      }, 5500);
+    } else {
+      brandClickTimer = setTimeout(() => {
+        brandClickCount = 0;
+      }, 700);
+    }
+  });
+}
+
+// Console watermark marquee
+console.log(
+  '%c 🎬 FINAL CUT: THE FAREWELL PREMIERE %c Engineered & Directed by Archit (GOD) ',
+  'background:#7A1022; color:#FFF; font-size:13px; font-weight:bold; padding:4px 10px;',
+  'background:#0B0B0F; color:#D4AF37; font-size:13px; font-weight:bold; padding:4px 10px; border:1px solid #D4AF37;'
+);
 
 updateRsvpCounter();
 
