@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Final Cut: The Farewell Premiere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   PREMIERE STYLESHEET — PALETTE & ARCHITECTURE
+   Black: #0B0B0F | Velvet Burgundy: #7A1022 | Champagne Gold: #D4AF37 / #F3E2A9 | Ivory: #F7F1E3
+   ═══════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#0B0B0F;
+  --black-trans:rgba(11,11,15,0.92);
+  --burgundy:#7A1022;
+  --burgundy-dark:#4A0A15;
+  --gold:#D4AF37;
+  --gold-light:#F3E2A9;
+  --gold-glow:rgba(212,175,55,0.35);
+  --ivory:#F7F1E3;
+  --ivory-muted:rgba(247,241,227,0.72);
+}
+
+html,body{
+  width:100%;height:100%;background:var(--black);color:var(--ivory);
+  font-family:'Inter',sans-serif;overflow:hidden;user-select:none;
+}
+
+canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:block;}
+
+/* Grain overlay */
+#grain{
+  position:fixed;inset:0;z-index:750;pointer-events:none;opacity:0.035;
+  mix-blend-mode:overlay;background-repeat:repeat;
+  animation:grain 0.5s steps(4) infinite;
+}
+@keyframes grain{
+  0%,100%{transform:translate(0,0)}25%{transform:translate(-2%,3%)}50%{transform:translate(3%,-2%)}75%{transform:translate(-3%,-3%)}
+}
+
+/* Cinematic Letterbox (z-index 800) */
+.letterbox{
+  position:fixed;left:0;right:0;z-index:800;background:var(--black);height:0;
+  transition:height 0.8s cubic-bezier(0.16,1,0.3,1);pointer-events:none;
+}
+.letterbox.top{top:0;}
+.letterbox.bottom{bottom:0;}
+.letterbox.active{height:6.5vh;}
+.letterbox.deep{height:11vh;}
+
+/* ═══════════════════════════════════════════
+   STAGE 0: FILM LEADER LOADER
+   ═══════════════════════════════════════════ */
+#loader{
+  position:fixed;inset:0;z-index:1500;background:var(--black);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+#loader.fade-out{opacity:0;pointer-events:none;}
+#leader-canvas{width:min(80vw,420px);height:min(80vw,420px);image-rendering:crisp-edges;}
+#loader-progress{margin-top:1.8rem;width:min(60vw,260px);height:3px;background:rgba(247,241,227,0.12);border-radius:2px;overflow:hidden;}
+#loader-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width 0.25s ease-out;}
+#loader-text{margin-top:0.8rem;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-light);font-family:'Cinzel',serif;}
+
+/* ═══════════════════════════════════════════
+   STAGE 1: ENVELOPE & TICKET UI
+   ═══════════════════════════════════════════ */
+#prompt{
+  position:fixed;bottom:14vh;left:50%;transform:translateX(-50%);z-index:850;
+  font-family:'Cinzel',serif;font-size:clamp(0.8rem,2vw,1rem);letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--gold-light);opacity:0;transition:opacity 0.6s ease;
+  pointer-events:none;text-shadow:0 0 25px var(--gold-glow);
+}
+#prompt.visible{opacity:1;animation:pulsePrompt 2.2s ease-in-out infinite;}
+@keyframes pulsePrompt{0%,100%{opacity:0.5;transform:translateX(-50%) scale(0.98);}50%{opacity:1;transform:translateX(-50%) scale(1.02);}}
+
+#ticket-overlay{
+  position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1);
+  background:radial-gradient(ellipse at center,rgba(11,11,15,0.7),rgba(11,11,15,0.96));
+  backdrop-filter:blur(8px);
+}
+#ticket-overlay.visible{opacity:1;pointer-events:auto;}
+#ticket-card{
+  width:min(90vw,440px);padding:2.5rem 2.2rem;
+  background:linear-gradient(145deg,#181410,#0c0a08);
+  border:1px solid rgba(212,175,55,0.45);border-radius:12px;
+  text-align:center;position:relative;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.85),0 0 50px rgba(212,175,55,0.15),inset 0 1px 0 rgba(212,175,55,0.3);
+}
+#ticket-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%,rgba(212,175,55,0.18),transparent 70%);
+  pointer-events:none;
+}
+#ticket-card h1{
+  font-family:'Cinzel',serif;font-weight:900;font-size:clamp(1.6rem,4.5vw,2.2rem);
+  color:var(--gold);line-height:1.15;letter-spacing:0.05em;margin-bottom:0.35rem;
+  text-shadow:0 2px 15px rgba(212,175,55,0.3);
+}
+#ticket-card .subtitle{
+  font-family:'Cinzel',serif;font-size:clamp(0.7rem,2vw,0.85rem);
+  letter-spacing:0.28em;text-transform:uppercase;color:var(--gold-light);margin-bottom:1.6rem;
+}
+#ticket-card .divider{
+  width:80px;height:1px;margin:0 auto 1.6rem;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+#ticket-card .detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0.45rem 0;border-bottom:1px solid rgba(247,241,227,0.06);font-size:0.85rem;
+}
+#ticket-card .detail-label{color:var(--ivory-muted);letter-spacing:0.08em;text-transform:uppercase;font-size:0.75rem;}
+#ticket-card .detail-val{color:var(--gold-light);font-weight:500;}
+#ticket-card .school-badge{
+  font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--ivory-muted);margin:1.4rem 0 1.2rem;
+}
+#ticket-card .enter-btn{
+  width:100%;padding:0.85rem 1.5rem;
+  background:linear-gradient(135deg,#D4AF37,#b38f26);color:#0B0B0F;
+  border:none;border-radius:100px;font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;
+  letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.3s cubic-bezier(0.16,1,0.3,1);box-shadow:0 6px 20px rgba(212,175,55,0.35);
+}
+#ticket-card .enter-btn:hover{
+  transform:translateY(-2px) scale(1.02);box-shadow:0 10px 30px rgba(212,175,55,0.55);
+  background:linear-gradient(135deg,#F3E2A9,#D4AF37);
+}
+
+/* ═══════════════════════════════════════════
+   STAGE 2: HUD & NAVIGATION (z-index 950 - always above letterbox)
+   ═══════════════════════════════════════════ */
+#hud{
+  position:fixed;inset:0;z-index:950;pointer-events:none;opacity:0;
+  transition:opacity 0.8s ease;display:flex;flex-direction:column;justify-content:space-between;
+  padding:1.4rem 2rem;
+}
+#hud.visible{opacity:1;}
+#hud>*{pointer-events:auto;}
+
+.hud-top{display:flex;justify-content:space-between;align-items:center;width:100%;}
+.hud-brand{font-family:'Cinzel',serif;font-weight:700;font-size:0.95rem;letter-spacing:0.22em;color:var(--gold);text-transform:uppercase;}
+.hud-brand span{color:var(--ivory-muted);font-weight:400;font-size:0.75rem;margin-left:0.6rem;letter-spacing:0.12em;}
+
+.hud-chapters{
+  display:flex;gap:0.4rem;background:rgba(11,11,15,0.85);
+  border:1px solid rgba(212,175,55,0.35);border-radius:100px;padding:0.25rem 0.45rem;
+  backdrop-filter:blur(10px);
+}
+.chap-btn{
+  background:none;border:none;color:var(--ivory-muted);padding:0.4rem 0.85rem;border-radius:100px;
+  font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.3s ease;
+}
+.chap-btn:hover{color:var(--gold-light);}
+.chap-btn.active{background:var(--gold);color:var(--black);font-weight:700;box-shadow:0 0 15px var(--gold-glow);}
+
+.hud-actions{display:flex;align-items:center;gap:0.75rem;}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid rgba(212,175,55,0.3);
+  background:rgba(11,11,15,0.7);color:var(--ivory);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;backdrop-filter:blur(8px);transition:all 0.3s ease;
+}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);transform:scale(1.08);}
+
+#skip{
+  position:fixed;bottom:2rem;right:2rem;z-index:1000;
+  background:rgba(11,11,15,0.75);border:1px solid rgba(212,175,55,0.35);
+  color:var(--ivory);padding:0.5rem 1.3rem;border-radius:100px;
+  font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;
+  cursor:pointer;backdrop-filter:blur(8px);transition:all 0.3s ease;opacity:0;pointer-events:none;
+}
+#skip.visible{opacity:1;pointer-events:auto;}
+#skip:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(212,175,55,0.35);}
+
+.hud-bottom{display:flex;flex-direction:column;align-items:center;gap:0.4rem;}
+.scroll-hint{
+  font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--gold-light);display:flex;align-items:center;gap:0.5rem;
+  animation:bounceHint 2s infinite ease-in-out;
+}
+@keyframes bounceHint{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.scroll-progress-track{
+  width:min(60vw,340px);height:2px;background:rgba(247,241,227,0.12);
+  border-radius:2px;overflow:hidden;
+}
+#scroll-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;}
+
+/* ═══════════════════════════════════════════
+   SCENE OVERLAYS (Scenes A to D)
+   CRITICAL: Entire overlay container has pointer-events: none! Only interactive cards have pointer-events: auto!
+   ═══════════════════════════════════════════ */
+#scene-overlays{position:fixed;inset:0;z-index:600;pointer-events:none;display:none;}
+#scene-overlays.visible{display:block;}
+
+.scene-overlay{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:2rem;opacity:0;transform:translateY(15px);
+  transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  pointer-events:none !important;
+}
+.scene-overlay.active{opacity:1;transform:translateY(0);}
+
+/* Scene A: Lobby */
+.lobby-box{
+  pointer-events:auto;max-width:560px;background:var(--black-trans);
+  border:1px solid rgba(212,175,55,0.35);border-radius:12px;padding:2rem 2.2rem;
+  backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(0,0,0,0.85),0 0 30px rgba(212,175,55,0.1);
+}
+.lobby-eyebrow{font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold-light);margin-bottom:0.4rem;}
+.lobby-title{font-family:'Cinzel',serif;font-size:clamp(1.7rem,3.8vw,2.4rem);font-weight:900;color:var(--gold);line-height:1.15;margin-bottom:1.1rem;}
+.countdown-grid{display:flex;justify-content:center;gap:0.75rem;margin:1.2rem 0;}
+.countdown-item{
+  background:rgba(247,241,227,0.04);border:1px solid rgba(212,175,55,0.25);
+  border-radius:8px;padding:0.6rem 0.85rem;min-width:66px;
+}
+.countdown-num{font-family:'Cinzel',serif;font-size:1.55rem;font-weight:700;color:var(--gold);line-height:1;}
+.countdown-lbl{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ivory-muted);margin-top:0.25rem;}
+.lobby-venue{font-size:0.88rem;color:var(--ivory);margin:1rem 0 1.3rem;line-height:1.5;}
+.lobby-venue span{color:var(--gold-light);display:block;font-size:0.8rem;margin-top:0.2rem;}
+.btn-gold{
+  display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.8rem;
+  background:linear-gradient(135deg,var(--gold),#b38f26);color:var(--black);border:none;
+  border-radius:100px;font-family:'Cinzel',serif;font-size:0.78rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;text-decoration:none;cursor:pointer;
+  transition:all 0.3s ease;box-shadow:0 6px 20px rgba(212,175,55,0.3);
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,175,55,0.55);}
+
+/* Scene B: Red Carpet */
+.carpet-box{
+  pointer-events:auto;max-width:620px;background:var(--black-trans);
+  border:1px solid rgba(212,175,55,0.35);border-radius:12px;padding:2rem 2.2rem;
+  backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(0,0,0,0.85);
+}
+.carpet-title{font-family:'Cinzel',serif;font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;color:var(--gold);margin-bottom:0.35rem;}
+.carpet-sub{font-size:0.82rem;color:var(--ivory-muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1.4rem;}
+.timeline-list{display:flex;flex-direction:column;gap:0.65rem;text-align:left;margin-bottom:1.4rem;}
+.timeline-item{display:flex;align-items:center;gap:1.1rem;padding:0.5rem 0.75rem;border-radius:6px;background:rgba(247,241,227,0.03);border:1px solid rgba(247,241,227,0.06);}
+.timeline-time{font-family:'Cinzel',serif;font-weight:700;color:var(--gold);font-size:0.82rem;min-width:72px;}
+.timeline-desc{font-size:0.82rem;color:var(--ivory);}
+.tbd-badge{display:inline-block;padding:0.12rem 0.45rem;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.35);border-radius:4px;font-size:0.68rem;color:var(--gold-light);letter-spacing:0.1em;}
+.dress-code-row{display:flex;align-items:center;justify-content:center;gap:0.6rem;font-size:0.82rem;color:var(--ivory-muted);padding-top:0.75rem;border-top:1px solid rgba(247,241,227,0.08);}
+
+
+/* Scene B Quotes */
+.carpet-eyebrow{font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-light);margin-bottom:0.3rem;}
+.quotes-list{display:flex;flex-direction:column;gap:0.65rem;text-align:left;margin-bottom:1.2rem;}
+.quote-item{
+  display:flex;align-items:flex-start;gap:0.75rem;padding:0.7rem 0.95rem;
+  border-radius:8px;background:rgba(247,241,227,0.03);border:1px solid rgba(212,175,55,0.18);
+  transition:all 0.3s ease;
+}
+.quote-item:hover{background:rgba(212,175,55,0.06);border-color:rgba(212,175,55,0.4);transform:translateX(3px);}
+.quote-mark{font-family:'Cinzel',serif;font-size:1.6rem;line-height:1;color:var(--gold);opacity:0.8;}
+.quote-content{flex:1;}
+.quote-text{font-size:0.83rem;color:var(--ivory);line-height:1.45;font-style:italic;}
+.quote-author{font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-light);margin-top:0.25rem;display:block;}
+
+.directors-credits{
+  margin-top:1.2rem;padding-top:0.8rem;border-top:1px solid rgba(212,175,55,0.3);
+  font-family:'Cinzel',serif;text-align:center;pointer-events:auto;
+}
+.credits-tag{font-size:0.72rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;}
+.credits-sub{font-size:0.78rem;color:var(--ivory-muted);margin-top:0.25rem;letter-spacing:0.08em;}
+
+/* Scene C: The Cast */
+.cast-header-card{
+  position:absolute;top:11vh;left:50%;transform:translateX(-50%);text-align:center;
+  pointer-events:none;
+}
+.cast-header-title{font-family:'Cinzel',serif;font-size:clamp(1.9rem,4.5vw,3rem);font-weight:900;color:var(--gold);text-shadow:0 0 30px var(--gold-glow);letter-spacing:0.18em;}
+.cast-header-sub{font-size:0.82rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-light);margin-top:0.35rem;}
+.cast-interactive-hint{
+  pointer-events:auto;position:absolute;bottom:12vh;left:50%;transform:translateX(-50%);
+  background:rgba(11,11,15,0.85);border:1px solid rgba(212,175,55,0.35);border-radius:100px;
+  padding:0.5rem 1.5rem;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.15em;
+  color:var(--ivory);backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,0.6);
+}
+
+/* Scene D: The Directors */
+.directors-header-card{
+  position:absolute;top:10vh;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;
+}
+.directors-header-title{font-family:'Cinzel',serif;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;color:var(--gold);letter-spacing:0.18em;}
+.directors-dedication{
+  font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(0.92rem,2vw,1.2rem);
+  color:var(--ivory);margin-top:0.45rem;max-width:540px;line-height:1.45;
+}
+.directors-interactive-hint{
+  pointer-events:auto;position:absolute;bottom:11vh;left:50%;transform:translateX(-50%);
+  background:rgba(11,11,15,0.85);border:1px solid rgba(212,175,55,0.35);border-radius:100px;
+  padding:0.5rem 1.5rem;font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.15em;
+  color:var(--ivory);backdrop-filter:blur(8px);box-shadow:0 6px 20px rgba(0,0,0,0.6);
+}
+
+
+/* ═══════════════════════════════════════════
+   RSVP MODAL & PREMIERE PASS STYLING (z-index 10000)
+   ═══════════════════════════════════════════ */
+.rsvp-hud-btn{
+  background:linear-gradient(135deg,var(--gold),#a68120);color:var(--black);border:none;
+  padding:0.4rem 1.1rem;border-radius:100px;font-family:'Cinzel',serif;font-size:0.72rem;
+  font-weight:800;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.3s ease;box-shadow:0 0 15px rgba(212,175,55,0.45);
+}
+.rsvp-hud-btn:hover{transform:scale(1.05);box-shadow:0 0 25px rgba(212,175,55,0.7);}
+
+#rsvp-modal{
+  position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;
+  background:rgba(5,5,8,0.92);backdrop-filter:blur(18px);opacity:0;pointer-events:none;
+  transition:opacity 0.35s cubic-bezier(0.16,1,0.3,1);padding:1rem;
+}
+#rsvp-modal.visible{opacity:1;pointer-events:auto;}
+.rsvp-card{
+  max-width:540px;width:100%;max-height:90vh;overflow-y:auto;
+  background:linear-gradient(145deg,#15131a,#0c0b10);border:1px solid rgba(212,175,55,0.5);
+  border-radius:14px;padding:2rem 2.2rem;box-shadow:0 25px 70px rgba(0,0,0,0.95),0 0 45px rgba(212,175,55,0.2);
+  position:relative;display:flex;flex-direction:column;
+}
+.rsvp-close-btn{
+  position:absolute;top:1rem;right:1rem;width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(212,175,55,0.4);background:rgba(0,0,0,0.6);color:var(--gold);
+  font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.rsvp-close-btn:hover{background:var(--gold);color:var(--black);}
+.rsvp-header{text-align:center;margin-bottom:1.4rem;}
+.rsvp-badge{display:inline-block;padding:0.2rem 0.6rem;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);border-radius:100px;font-size:0.68rem;color:var(--gold-light);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.4rem;}
+.rsvp-title{font-family:'Cinzel',serif;font-size:1.55rem;font-weight:900;color:var(--gold);margin-bottom:0.25rem;}
+.rsvp-sub{font-size:0.82rem;color:var(--ivory-muted);}
+.confirmed-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--gold-light);margin-top:0.4rem;font-family:'Cinzel',serif;}
+
+.rsvp-form{display:flex;flex-direction:column;gap:0.95rem;text-align:left;}
+.form-group{display:flex;flex-direction:column;gap:0.35rem;}
+.form-label{font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-light);font-family:'Cinzel',serif;font-weight:700;}
+.form-input,.form-select{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;
+  padding:0.65rem 0.85rem;color:var(--ivory);font-size:0.88rem;outline:none;
+  transition:all 0.2s ease;font-family:'Inter',sans-serif;
+}
+.form-input:focus,.form-select:focus{border-color:var(--gold);box-shadow:0 0 10px rgba(212,175,55,0.35);background:rgba(255,255,255,0.07);}
+.form-input::placeholder{color:rgba(247,241,227,0.35);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;}
+.checkbox-row{display:flex;align-items:center;gap:0.6rem;cursor:pointer;user-select:none;margin-top:0.3rem;}
+.checkbox-row input{accent-color:var(--gold);width:16px;height:16px;}
+.checkbox-label{font-size:0.8rem;color:var(--ivory);}
+
+.rsvp-submit-btn{
+  margin-top:0.6rem;padding:0.8rem 1.8rem;background:linear-gradient(135deg,var(--gold),#a68120);
+  border:none;border-radius:100px;color:var(--black);font-family:'Cinzel',serif;font-size:0.82rem;
+  font-weight:800;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.3s ease;box-shadow:0 8px 25px rgba(212,175,55,0.35);
+}
+.rsvp-submit-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(212,175,55,0.6);}
+
+/* Generated Ticket Presentation */
+#rsvp-ticket-view{display:none;flex-direction:column;align-items:center;text-align:center;}
+#rsvp-ticket-view.active{display:flex;}
+.golden-pass{
+  background:linear-gradient(135deg,#241c0e,#110e08);border:2px solid var(--gold);
+  border-radius:12px;padding:1.6rem 1.8rem;width:100%;margin-bottom:1.4rem;
+  box-shadow:0 15px 40px rgba(0,0,0,0.9),0 0 30px rgba(212,175,55,0.25);position:relative;
+}
+.pass-title{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:900;color:var(--gold);margin-bottom:0.2rem;}
+.pass-event{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-light);margin-bottom:1rem;}
+.pass-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;text-align:left;border-top:1px dashed rgba(212,175,55,0.4);border-bottom:1px dashed rgba(212,175,55,0.4);padding:0.9rem 0;margin-bottom:0.9rem;}
+.pass-item-label{font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ivory-muted);}
+.pass-item-val{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--gold);font-weight:700;}
+.calendar-btns{display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;width:100%;}
+.btn-cal{
+  display:inline-flex;align-items:center;gap:0.45rem;padding:0.6rem 1.2rem;
+  background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:100px;
+  color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.72rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;text-decoration:none;
+  transition:all 0.25s ease;
+}
+.btn-cal:hover{background:var(--gold);color:var(--black);box-shadow:0 0 15px rgba(212,175,55,0.4);}
+
+/* ═══════════════════════════════════════════
+   INSPECT MODAL (z-index 9999)
+   ═══════════════════════════════════════════ */
+#inspect-modal{
+  position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:rgba(5,5,8,0.88);backdrop-filter:blur(14px);opacity:0;pointer-events:none;
+  transition:opacity 0.35s ease;padding:1.5rem;
+}
+#inspect-modal.visible{opacity:1;pointer-events:auto;}
+.inspect-card{
+  max-width:440px;width:100%;background:linear-gradient(145deg,#1c1813,#0b0907);
+  border:1px solid var(--gold);border-radius:12px;overflow:hidden;
+  box-shadow:0 25px 70px rgba(0,0,0,0.95),0 0 50px rgba(212,175,55,0.25);
+  display:flex;flex-direction:column;position:relative;
+}
+.inspect-img-box{width:100%;height:330px;overflow:hidden;background:#050508;display:flex;align-items:center;justify-content:center;}
+.inspect-img-box img{width:100%;height:100%;object-fit:cover;}
+.inspect-details{padding:1.5rem 1.8rem;text-align:center;}
+.inspect-name{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;color:var(--gold);margin-bottom:0.25rem;}
+.inspect-tag{font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-light);margin-bottom:0.75rem;}
+.inspect-caption{font-size:0.88rem;color:var(--ivory);line-height:1.5;margin-bottom:0.8rem;}
+.inspect-close-btn{
+  position:absolute;top:0.8rem;right:0.8rem;width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(212,175,55,0.5);background:rgba(0,0,0,0.65);color:var(--gold);
+  font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.inspect-close-btn:hover{background:var(--gold);color:var(--black);}
+
+
+
+
+/* Virtual Scroll Container */
+#scroll-container{
+  position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;z-index:500;
+  pointer-events:none;
+}
+#scroll-container.interactive{pointer-events:auto;}
+#scroll-height{height:500vh;width:100%;}
+
+/* ═══════════════════════════════════════════
+   2D FALLBACK (No WebGL)
+   ═══════════════════════════════════════════ */
+#fallback{position:fixed;inset:0;z-index:3000;overflow-y:auto;background:var(--black);padding:2.5rem 1.5rem;display:none;}
+#fallback.active{display:flex;flex-direction:column;align-items:center;}
+#fallback h1{font-family:'Cinzel',serif;color:var(--gold);font-size:clamp(1.8rem,5vw,2.8rem);text-align:center;margin:1rem 0 0.4rem;}
+#fallback .sub{color:var(--gold-light);font-size:0.9rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2rem;text-align:center;}
+.fallback-card{max-width:540px;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:1.6rem;margin-bottom:1.5rem;}
+.fallback-card h2{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);margin-bottom:1rem;}
+.fallback-card p{font-size:0.95rem;margin-bottom:0.5rem;color:var(--ivory);}
+.fallback-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.8rem;margin-top:1rem;}
+.fallback-thumb{aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:#1a1a24;border:1px solid rgba(212,175,55,0.3);}
+.fallback-thumb img{width:100%;height:100%;object-fit:cover;}
+
+@media(max-width:768px){
+  .hud-chapters{display:none;}
+  .letterbox.active{height:4.5vh;}
+  .letterbox.deep{height:7.5vh;}
+}
+</style>
+</head>
+
+<body>
+<canvas id="webgl"></canvas>
+
+<!-- ═══ FILM GRAIN ═══ -->
+<div id="grain"></div>
+
+<!-- ═══ LETTERBOX ═══ -->
+<div class="letterbox top"></div>
+<div class="letterbox bottom"></div>
+
+<!-- ═══ FILM LEADER LOADER ═══ -->
+<div id="loader">
+  <canvas id="leader-canvas" width="420" height="420"></canvas>
+  <div id="loader-progress"><div id="loader-bar"></div></div>
+  <div id="loader-text">Preparing the premiere…</div>
+</div>
+
+<!-- ═══ STAGE 1: ENVELOPE INTERACTION PROMPT ═══ -->
+<div id="prompt">Tap the envelope</div>
+
+<!-- ═══ STAGE 1: TICKET OVERLAY ═══ -->
+<div id="ticket-overlay">
+  <div id="ticket-card">
+    <h1>Final Cut</h1>
+    <div class="subtitle">The Farewell Premiere</div>
+    <div class="divider"></div>
+    <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">20 November 2026</span></div>
+    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">1:00 PM – 6:00 PM</span></div>
+    <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-val">GK Institute of Commerce</span></div>
+    <div class="detail-row"><span class="detail-label">Hosted By</span><span class="detail-val">Class 11</span></div>
+    <div class="detail-row"><span class="detail-label">Honoring</span><span class="detail-val">Class 12 Stars</span></div>
+    <div class="school-badge">GK Institute, Patiala</div>
+    <button class="enter-btn" id="enter-btn">Enter the Premiere →</button>
+  </div>
+</div>
+
+<!-- ═══ STAGE 2: HUD & NAVIGATION (z-index 950) ═══ -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="hud-brand">Final Cut <span>The Farewell Premiere</span></div>
+    <div class="hud-chapters">
+      <button class="chap-btn active" data-chapter="0">Lobby</button>
+      <button class="chap-btn" data-chapter="1">Red Carpet</button>
+      <button class="chap-btn" data-chapter="2">The Cast</button>
+      <button class="chap-btn" data-chapter="3">The Directors</button>
+    </div>
+    <div class="hud-actions">
+      <button class="rsvp-hud-btn" id="open-rsvp-btn" onclick="window.openRsvp && window.openRsvp()">RSVP ★</button>
+      <button class="icon-btn" id="sound-btn" title="Toggle Sound">
+        <svg id="sound-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        <svg id="sound-icon-on" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="scroll-hint">
+      <span>Scroll to explore the premiere</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+    </div>
+    <div class="scroll-progress-track">
+      <div id="scroll-progress-bar"></div>
+    </div>
+  </div>
+</div>
+
+<button id="skip">Skip Intro ›</button>
+
+<!-- ═══ SYNCHRONIZED SCENE OVERLAYS (Scenes A to D - starts hidden) ═══ -->
+<div id="scene-overlays">
+  <!-- Scene A: Lobby -->
+  <div class="scene-overlay" id="overlay-lobby">
+    <div class="lobby-box">
+      <div class="lobby-eyebrow">GK Institute of Commerce Presents</div>
+      <h2 class="lobby-title">Final Cut: The Farewell Premiere</h2>
+      <div class="countdown-grid">
+        <div class="countdown-item"><div class="countdown-num" id="cd-days">--</div><div class="countdown-lbl">Days</div></div>
+        <div class="countdown-item"><div class="countdown-num" id="cd-hours">--</div><div class="countdown-lbl">Hours</div></div>
+        <div class="countdown-item"><div class="countdown-num" id="cd-mins">--</div><div class="countdown-lbl">Mins</div></div>
+        <div class="countdown-item"><div class="countdown-num" id="cd-secs">--</div><div class="countdown-lbl">Secs</div></div>
+      </div>
+      <div class="lobby-venue">
+        Friday, 20 November 2026 • 1:00 PM – 6:00 PM IST
+        <span>GK Institute of Commerce, Patiala</span>
+      </div>
+      <a href="https://www.google.com/maps/search/GK+Institute+of+Commerce+Patiala" target="_blank" rel="noopener noreferrer" class="btn-gold">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Open in Google Maps
+      </a>
+    </div>
+  </div>
+
+  <!-- Scene B: Red Carpet -->
+  <div class="scene-overlay" id="overlay-carpet">
+    <div class="carpet-box">
+      <div class="carpet-eyebrow">The Premiere Walk</div>
+      <h2 class="carpet-title">Echoes of the Corridor</h2>
+      <div class="carpet-sub">Memorable Lines & Senior Chronicles</div>
+      <div class="quotes-list">
+        <div class="quote-item">
+          <div class="quote-mark">“</div>
+          <div class="quote-content">
+            <p class="quote-text">We didn't realize we were making memories; we just knew we were having fun.</p>
+            <span class="quote-author">Class 12 Heritage</span>
+          </div>
+        </div>
+        <div class="quote-item">
+          <div class="quote-mark">“</div>
+          <div class="quote-content">
+            <p class="quote-text">Every bell was a soundtrack, every classroom a scene, every corridor a story.</p>
+            <span class="quote-author">GK Institute Archives</span>
+          </div>
+        </div>
+        <div class="quote-item">
+          <div class="quote-mark">“</div>
+          <div class="quote-content">
+            <p class="quote-text">From morning roll-calls to late-night panic — we didn't just study here, we lived here.</p>
+            <span class="quote-author">Senior Chronicles</span>
+          </div>
+        </div>
+        <div class="quote-item">
+          <div class="quote-mark">“</div>
+          <div class="quote-content">
+            <p class="quote-text">The final bell will ring, but the reel keeps playing in our hearts forever.</p>
+            <span class="quote-author">The Farewell Walk</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scene C: The Cast -->
+  <div class="scene-overlay" id="overlay-cast">
+    <div class="cast-header-card">
+      <h2 class="cast-header-title">THE CAST</h2>
+      <div class="cast-header-sub">Class 12 • The Stars of the Premiere</div>
+    </div>
+    <div class="cast-interactive-hint">Drag to rotate the constellation &bull; Tap any frame to spotlight</div>
+  </div>
+
+  <!-- Scene D: The Directors -->
+  <div class="scene-overlay" id="overlay-directors">
+    <div class="directors-header-card">
+      <h2 class="directors-header-title">THE DIRECTORS</h2>
+      <div class="directors-dedication">"To the ones who wrote the script and directed every scene."</div>
+    </div>
+    <div class="directors-interactive-hint" style="display:flex;gap:0.8rem;align-items:center;">
+      <span>Tap any gold frame to inspect</span>
+      <button class="rsvp-hud-btn" id="open-rsvp-directors-btn" onclick="window.openRsvp && window.openRsvp()" style="padding:0.25rem 0.85rem;font-size:0.65rem;">RSVP Now ★</button>
+    </div>
+    <div class="directors-credits">
+      <div class="credits-tag">GK INSTITUTE • CLASS OF 2026 FAREWELL PREMIERE</div>
+      <div class="credits-sub">Directed with admiration & love by Class 11 &bull; See you at the premiere!</div>
+    </div>
+  </div>
+
+  
+</div>
+
+
+
+<!-- ═══ INSPECT MODAL (ENLARGE PHOTO - z-index 9999) ═══ -->
+<div id="inspect-modal">
+  <div class="inspect-card">
+    <button class="inspect-close-btn" id="modal-close">&times;</button>
+    <div class="inspect-img-box">
+      <img id="modal-img" src="" alt="Spotlight Portrait">
+    </div>
+    <div class="inspect-details">
+      <h3 class="inspect-name" id="modal-name">Star Name</h3>
+      <div class="inspect-tag" id="modal-tag">Class 12 Lead</div>
+      <p class="inspect-caption" id="modal-caption">Leading the Class of 2026 into cinematic greatness.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ RSVP & PREMIERE PASS MODAL (z-index 10000) ═══ -->
+<div id="rsvp-modal">
+  <div class="rsvp-card">
+    <button class="rsvp-close-btn" id="rsvp-close">&times;</button>
+    
+    <!-- Form View -->
+    <div id="rsvp-form-view">
+      <div class="rsvp-header">
+        <div class="rsvp-badge">Premiere Reservation</div>
+        <h2 class="rsvp-title">RESERVE YOUR PASS</h2>
+        <div class="rsvp-sub">Join Class 11 in celebrating the Class 12 stars at Final Cut.</div>
+        
+      </div>
+
+      <form class="rsvp-form" id="rsvp-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="rsvp-name">Full Name *</label>
+            <input type="text" id="rsvp-name" class="form-input" placeholder="e.g. Jasleen Kaur" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rsvp-class">Class & Section *</label>
+            <input type="text" id="rsvp-class" class="form-input" placeholder="e.g. 12-Commerce A" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="rsvp-grade">Grade *</label>
+            <select id="rsvp-grade" class="form-select" required>
+              <option value="12">Class 12 (Honored Senior Star)</option>
+              <option value="11">Class 11 (Host Organizers)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rsvp-song">Song Request</label>
+            <input type="text" id="rsvp-song" class="form-input" placeholder="DJ anthem request (optional)">
+          </div>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="rsvp-perform">
+          <span class="checkbox-label">⭐ I would like to perform on stage (Speech / Dance / Song)</span>
+        </label>
+
+        <button type="submit" class="rsvp-submit-btn">Confirm RSVP & Send to WhatsApp →</button>
+      </form>
+    </div>
+
+    <!-- Generated Ticket View -->
+    <div id="rsvp-ticket-view">
+      <div class="golden-pass">
+        <div class="pass-title">FINAL CUT PREMIERE PASS</div>
+        <div class="pass-event">GK Institute of Commerce &bull; Patiala</div>
+        <div class="pass-grid">
+          <div><div class="pass-item-label">Guest</div><div class="pass-item-val" id="ticket-guest-name">Guest Name</div></div>
+          
+          <div><div class="pass-item-label">Date & Time</div><div class="pass-item-val">20 Nov &bull; 1:00 PM</div></div>
+          <div><div class="pass-item-label">Pass Type</div><div class="pass-item-val" id="ticket-grade-val">Class 12 VIP</div></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--gold-light);letter-spacing:0.12em;">HONORING THE CLASS OF 2026</div>
+      </div>
+
+      <div class="calendar-btns">
+        <a href="#" id="whatsapp-btn" target="_blank" rel="noopener noreferrer" class="btn-cal" style="background:#25D366;color:#0b0b0f;font-weight:800;border-color:#25D366;box-shadow:0 0 15px rgba(37,211,102,0.4);">
+          💬 Send Confirmation to WhatsApp
+        </a>
+        <a href="#" id="gcal-link" target="_blank" rel="noopener noreferrer" class="btn-cal">
+          📅 Add to Google Calendar
+        </a>
+        <button id="download-ics-btn" class="btn-cal">
+          📥 Download .ICS Calendar Pass
+        </button>
+        <button id="rsvp-done-btn" class="btn-gold" style="padding:0.6rem 1.4rem;font-size:0.72rem;">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+!-- ═══ VIRTUAL SCROLL CONTAINER ═══ -->
+<div id="scroll-container">
+  <div id="scroll-height"></div>
+</div>
+
+<!-- ═══ 2D FALLBACK ═══ -->
+<div id="fallback">
+  <h1>Final Cut: The Farewell Premiere</h1>
+  <div class="sub">Class 11 to Class 12 • GK Institute, Patiala</div>
+  <div class="fallback-card">
+    <h2>Event Particulars</h2>
+    <p>📅 <strong>Date:</strong> 20 November 2026</p>
+    <p>🕐 <strong>Time:</strong> 1:00 PM – 6:00 PM (Asia/Kolkata)</p>
+    <p>📍 <strong>Venue:</strong> GK Institute of Commerce, Patiala</p>
+    <p>🎬 <strong>Hosted by:</strong> Class 11</p>
+      </div>
+  <div class="fallback-card">
+    <h2>The Cast (Seniors)</h2>
+    <div class="fallback-gallery" id="fallback-cast-gallery"></div>
+  </div>
+  <div class="fallback-card">
+    <h2>The Directors (Teachers)</h2>
+    <p style="color:var(--gold-light);font-style:italic;margin-bottom:0.8rem">"To the ones who wrote the script and directed every scene."</p>
+    <div class="fallback-gallery" id="fallback-teachers-gallery"></div>
+  
+  
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     THREE.JS MODULES & APPLICATION SCRIPT
+     ═══════════════════════════════════════════════════ -->
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 1 — EDITABLE CONFIG (ONE SOURCE OF TRUTH)
+   ═══════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  event: {
+    title: 'Final Cut: The Farewell Premiere',
+    school: 'GK Institute, Patiala',
+    date: '2026-11-20',
+    startTime: '13:00',
+    endTime: '18:00',
+    isoStart: '2026-11-20T13:00:00+05:30',
+    timezone: 'Asia/Kolkata',
+    venue: 'GK Institute of Commerce, Patiala',
+    mapsLink: 'https://www.google.com/maps/search/GK+Institute+of+Commerce+Patiala',
+    organizer: 'Class 11',
+    schedule: [
+      { time: '01:00 PM', label: 'Red Carpet Arrival & Paparazzi Calls' },
+      { time: '02:00 PM', label: 'Grand Auditorium Opening & Welcome Address' },
+      { time: '03:00 PM', label: 'The Senior Tribute Film & Memory Reel' },
+      { time: '04:30 PM', label: 'Golden Statuette Awards & Speeches' },
+      { time: '05:30 PM', label: 'The Farewell Waltz & Cake Cutting' },
+      { time: '06:00 PM', label: 'Final Standing Ovation & Curtain Call' }
+    ],
+    contact: '[TBD]'
+  },
+
+  students: [
+    { file: 'IMG_20261113_185330_022.jpg',       name: 'Senior Lead 01', caption: 'Leading the squad with charisma and poise.' },
+    { file: 'IMG_20261113_185335_384.jpg',       name: 'Senior Star 02', caption: 'The quiet storm behind every triumph.' },
+    { file: 'IMG_20261113_185335_384~2.jpg',     name: 'Senior Icon 03', caption: 'Always camera-ready, always unforgettable.' },
+    { file: 'IMG_20261113_185353_784.jpg',       name: 'Senior Star 04', caption: 'A shining presence in every corridor.' },
+    { file: 'Screenshot_20261111_084304_Instagram.jpg', name: 'Class Ensemble 05', caption: 'The fellowship of legends and laughter.' },
+    { file: 'Screenshot_20261111_084315_Instagram.jpg', name: 'Class Ensemble 06', caption: 'Unstoppable together on every stage.' },
+    { file: 'Screenshot_20261111_084330_Instagram.jpg', name: 'Class Ensemble 07', caption: 'Moments etched into the school archives forever.' },
+    { file: 'Screenshot_20261111_084334_Instagram.jpg', name: 'Class Ensemble 08', caption: 'The unforgettable yearbook chapter.' }
+  ],
+
+  teachers: [
+    { file: 'IMG_20261114_162701_695.jpg',         name: 'Mr Yuvraj Singdh',  subject: 'Business Studies', caption: 'Balancing every ledger, guiding every ambition with wisdom.' },
+    { file: '20261114_195034~3.jpg',               name: 'Ms Rajni',       subject: 'Business Studies',       caption: 'Teaching the strategy of leadership and lifelong integrity.' },
+    { file: 'Screenshot_20261111_225257_Instagram.jpg',   name: 'Mrs. Richa Jindal',             subject: 'Accountancy',   caption: 'Balancing every ledger, guiding every ambition with wisdom.' },
+    { file: 'Screenshot_20261111_230327_Instagram~2.jpg', name: 'Mrs Bharti Raina',             subject: 'Economics', caption: 'Solving every curve, guiding every ambition with wisdom..' },
+    { file: 'Screenshot_20261111_230648_Instagram~3.jpg', name: 'Mr Amit Mittal',            subject: 'Mathematics',         caption: 'Proving Formulas and intellectual courage.' },
+    { file: 'Screenshot_20261114_204434_Instagram~2.jpg',   name: 'Mr Abhilash Kapoor', subject: 'Accountancy', caption: 'Balancing every ledger, guiding every ambition with wisdom' }
+  ],
+
+  photoBasePath: '/public/photos/'
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 2 — AUDIO SYNTHESIZER (Web Audio API)
+   ═══════════════════════════════════════════════════════════════ */
+class PremiereAudio {
+  constructor() { this.ctx = null; this.muted = true; }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  }
+  toggle() { this.init(); this.muted = !this.muted; return !this.muted; }
+  playChime(freq = 520, dur = 0.6) {
+    if (this.muted || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.4, this.ctx.currentTime + dur);
+      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + dur);
+    } catch(e){}
+  }
+  playShutter() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const bSize = this.ctx.sampleRate * 0.06;
+      const b = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
+      const d = b.getChannelData(0);
+      for (let i = 0; i < bSize; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bSize * 0.2));
+      const s = this.ctx.createBufferSource(); s.buffer = b;
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      s.connect(g); g.connect(this.ctx.destination);
+      s.start();
+    } catch(e){}
+  }
+}
+const audio = new PremiereAudio();
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 3 — DIGNIFIED TEACHER PLACEHOLDER GENERATOR
+   ═══════════════════════════════════════════════════════════════ */
+function createDirectorPlaceholderTexture(name, subject) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 680;
+  const ctx = c.getContext('2d');
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 680);
+  bgGrad.addColorStop(0, '#2d060c');
+  bgGrad.addColorStop(0.5, '#4a0a15');
+  bgGrad.addColorStop(1, '#1b0307');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 512, 680);
+
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(30, 30, 452, 620);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(40, 40, 432, 600);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(256, 250, 135, 170, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#140407';
+  ctx.fill();
+  ctx.strokeStyle = '#F3E2A9';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.clip();
+
+  ctx.fillStyle = '#D4AF37';
+  ctx.beginPath(); ctx.arc(256, 210, 55, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(256, 340, 110, 85, 0, 0, Math.PI, true); ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = '#F3E2A9';
+  ctx.font = "700 28px 'Cinzel', serif";
+  ctx.textAlign = 'center';
+  ctx.fillText(name || 'Director', 256, 490);
+
+  ctx.fillStyle = '#D4AF37';
+  ctx.font = "400 18px 'Inter', sans-serif";
+  ctx.fillText(subject || 'Faculty of Excellence', 256, 530);
+
+  ctx.fillStyle = 'rgba(247,241,227,0.5)';
+  ctx.font = "italic 15px 'Playfair Display', serif";
+  ctx.fillText("GK Institute, Patiala", 256, 570);
+
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 4 — SPRING PHYSICS & UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+class Spring {
+  constructor(val = 0, { stiffness = 160, damping = 14, mass = 1 } = {}) {
+    this.value = val; this.target = val; this.velocity = 0;
+    this.stiffness = stiffness; this.damping = damping; this.mass = mass;
+  }
+  set(t) { this.target = t; return this; }
+  snap(v) { this.value = v; this.target = v; this.velocity = 0; }
+  update(dt) {
+    dt = Math.min(dt, 0.05);
+    const x = this.value - this.target;
+    const f = -this.stiffness * x - this.damping * this.velocity;
+    this.velocity += (f / this.mass) * dt;
+    this.value += this.velocity * dt;
+    return this.value;
+  }
+}
+
+function roundedRectShape(w, h, r) {
+  const s = new THREE.Shape();
+  s.moveTo(-w/2 + r, -h/2);
+  s.lineTo(w/2 - r, -h/2);
+  s.quadraticCurveTo(w/2, -h/2, w/2, -h/2 + r);
+  s.lineTo(w/2, h/2 - r);
+  s.quadraticCurveTo(w/2, h/2, w/2 - r, h/2);
+  s.lineTo(-w/2 + r, h/2);
+  s.quadraticCurveTo(-w/2, h/2, -w/2, h/2 - r);
+  s.lineTo(-w/2, -h/2 + r);
+  s.quadraticCurveTo(-w/2, -h/2, -w/2 + r, -h/2);
+  return s;
+}
+
+function makeGrainDataURL(size = 128) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const d = ctx.createImageData(size, size);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const v = Math.random() * 255 | 0;
+    d.data[i] = d.data[i+1] = d.data[i+2] = v;
+    d.data[i+3] = 255;
+  }
+  ctx.putImageData(d, 0, 0);
+  return c.toDataURL();
+}
+document.getElementById('grain').style.backgroundImage = `url(${makeGrainDataURL()})`;
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 5 — FILM LEADER ANIMATION
+   ═══════════════════════════════════════════════════════════════ */
+class FilmLeader {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.elapsed = 0;
+    this.done = false;
+    this.resize();
+  }
+  resize() {
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    const r = this.canvas.getBoundingClientRect();
+    this.canvas.width = r.width * dpr;
+    this.canvas.height = r.height * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.w = r.width; this.h = r.height;
+  }
+  update(dt, progress) {
+    if (this.done) return;
+    this.elapsed += dt;
+    if (this.elapsed >= 3.0 && progress >= 1) this.done = true;
+  }
+  draw(progress) {
+    const { ctx, w, h } = this;
+    const cx = w/2, cy = h/2, r = Math.min(w,h) * 0.32;
+    ctx.fillStyle = '#0B0B0F';
+    ctx.fillRect(0,0,w,h);
+
+    ctx.strokeStyle = 'rgba(212,175,55,0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(w*0.08, h*0.08, w*0.84, h*0.84);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - r*1.4, cy); ctx.lineTo(cx + r*1.4, cy);
+    ctx.moveTo(cx, cy - r*1.4); ctx.lineTo(cx, cy + r*1.4);
+    ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r*0.2, 0, Math.PI*2); ctx.stroke();
+
+    const numPhase = (this.elapsed % 1.0);
+    const sweep = -Math.PI/2 + numPhase * Math.PI * 2;
+    ctx.strokeStyle = 'rgba(212,175,55,0.85)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(sweep)*r, cy + Math.sin(sweep)*r);
+    ctx.stroke();
+
+    let num = 3;
+    if (this.elapsed > 2.0) num = 1;
+    else if (this.elapsed > 1.0) num = 2;
+
+    ctx.fillStyle = '#F3E2A9';
+    ctx.font = `700 ${r*0.9}px 'Cinzel', serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(num.toString(), cx, cy + 2);
+
+    if (Math.random() > 0.45) {
+      ctx.strokeStyle = 'rgba(247,241,227,0.15)';
+      ctx.beginPath();
+      const sx = Math.random() * w;
+      ctx.moveTo(sx, 0); ctx.lineTo(sx + (Math.random()-0.5)*15, h);
+      ctx.stroke();
+    }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 6 — 3D SCENE & ENGINE ARCHITECTURE
+   ═══════════════════════════════════════════════════════════════ */
+let scene, camera, renderer, composer;
+let clock = new THREE.Clock();
+let filmLeader;
+let envelopeGroup, flapMesh, sealGroup, ticketGroup, envelopeSpot;
+let leftCurtain, rightCurtain, curtainGroup, curtainLight, curtainAmb;
+let lobbyGroup, carpetGroup, castGroup, castSphereGroup, directorsGroup;
+let isolationSpot, spotlightTargetObj, volumetricBeam;
+let activeSpotlitGroup = null;
+let isPointerDragging = false, lastPointerPos = { x: 0, y: 0 };
+let sphereRotationOffset = { x: 0, y: 0 };
+let marqueeBulbs = [], flashLights = [];
+let interactiveObjects = [];
+let dustParticles;
+
+// Springs for physics & transitions
+const springs = {
+  envelopeHover: new Spring(0, { stiffness: 220, damping: 14 }),
+  flapAngle:     new Spring(0, { stiffness: 90, damping: 12 }),
+  sealBreak:     new Spring(0, { stiffness: 280, damping: 10 }),
+  ticketSlide:   new Spring(0, { stiffness: 110, damping: 12 }),
+  ticketFlip:    new Spring(0, { stiffness: 80, damping: 12, mass: 1.4 }),
+  curtainOpen:   new Spring(0, { stiffness: 22, damping: 9, mass: 1.8 }),
+  cameraFly:     new Spring(0, { stiffness: 24, damping: 12, mass: 2.0 }),
+  spotlightPower: new Spring(0, { stiffness: 140, damping: 14 }),
+  scrollLerp:    new Spring(0, { stiffness: 50, damping: 16 })
+};
+
+// State Machine
+const STATE = {
+  LOADING: 'loading',
+  ENVELOPE_IDLE: 'envelope_idle',
+  SEAL_BREAKING: 'seal_breaking',
+  FLAP_OPENING: 'flap_opening',
+  TICKET_SLIDING: 'ticket_sliding',
+  TICKET_IDLE: 'ticket_idle',
+  TICKET_FLIPPED: 'ticket_flipped',
+  CURTAINS_PARTING: 'curtains_parting',
+  SCROLL_WORLD: 'scroll_world'
+};
+let currentState = STATE.LOADING;
+
+// Raycasting & Interaction
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// DOM Elements
+const $loader = document.getElementById('loader');
+const $loaderBar = document.getElementById('loader-bar');
+const $prompt = document.getElementById('prompt');
+const $skip = document.getElementById('skip');
+const $ticketOvl = document.getElementById('ticket-overlay');
+const $enterBtn = document.getElementById('enter-btn');
+const $hud = document.getElementById('hud');
+const $sceneOverlays = document.getElementById('scene-overlays');
+const $scrollContainer = document.getElementById('scroll-container');
+const $scrollBar = document.getElementById('scroll-progress-bar');
+const $lbTop = document.querySelector('.letterbox.top');
+const $lbBottom = document.querySelector('.letterbox.bottom');
+const $inspectModal = document.getElementById('inspect-modal');
+const $modalImg = document.getElementById('modal-img');
+const $modalName = document.getElementById('modal-name');
+const $modalTag = document.getElementById('modal-tag');
+const $modalCaption = document.getElementById('modal-caption');
+const $modalClose = document.getElementById('modal-close');
+const $soundBtn = document.getElementById('sound-btn');
+const $soundIconOff = document.getElementById('sound-icon-off');
+const $soundIconOn = document.getElementById('sound-icon-on');
+const chapBtns = document.querySelectorAll('.chap-btn');
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 7 — CURTAIN DISPLACEMENT & CLOTH DEFORMATION
+   ═══════════════════════════════════════════════════════════════ */
+function createCurtainGeometry(w, h, segX = 40, segY = 25) {
+  const geom = new THREE.PlaneGeometry(w, h, segX, segY);
+  geom.userData.origPositions = new Float32Array(geom.attributes.position.array);
+  geom.userData.width = w;
+  geom.userData.height = h;
+  return geom;
+}
+
+function updateCurtainMesh(geom, openProgress, side) {
+  const pos = geom.attributes.position;
+  const orig = geom.userData.origPositions;
+  const w = geom.userData.width;
+  const h = geom.userData.height;
+
+  for (let i = 0; i < pos.count; i++) {
+    const ox = orig[i * 3];
+    const oy = orig[i * 3 + 1];
+    const yNorm = (oy + h/2) / h;
+
+    const openAmount = Math.max(0, Math.min(1, openProgress * 1.5 - (1 - yNorm) * 0.4));
+    const lateralShift = openAmount * (w * 0.92) * side;
+
+    const foldAmp = 0.22 * (1 - openAmount * 0.6);
+    const foldZ = Math.sin((ox / w) * 8 * Math.PI + openAmount * 3.0) * foldAmp * (1 + (1 - yNorm) * 0.4);
+    const gatherDrape = (1 - yNorm) * 0.12 * (1 - openAmount);
+
+    pos.setXYZ(i, ox + lateralShift, oy - gatherDrape, foldZ);
+  }
+  pos.needsUpdate = true;
+  geom.computeVertexNormals();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 8 — BUILD SCENES (A, B, C, D)
+   ═══════════════════════════════════════════════════════════════ */
+
+// --- SCENE A: LOBBY & MARQUEE SIGN (Placed at Z = 24 ahead of camera Z = 10) ---
+function buildLobbyScene() {
+  lobbyGroup = new THREE.Group();
+  lobbyGroup.position.set(0, 0, 24);
+
+  // Marquee Box Structure
+  const marqueeBox = new THREE.Mesh(
+    new THREE.BoxGeometry(8.6, 3.0, 0.45),
+    new THREE.MeshStandardMaterial({ color: 0x14141c, metalness: 0.9, roughness: 0.25 })
+  );
+  marqueeBox.position.set(0, 2.5, 0);
+  lobbyGroup.add(marqueeBox);
+
+  // Marquee Gold Trim
+  const marqueeBorder = new THREE.Mesh(
+    new THREE.BoxGeometry(8.8, 3.2, 0.4),
+    new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1.0, roughness: 0.2 })
+  );
+  marqueeBorder.position.set(0, 2.5, 0.05);
+  lobbyGroup.add(marqueeBorder);
+
+  // Marquee Illuminated Canvas Face (faces towards -Z, directly towards camera at Z=10)
+  const mc = document.createElement('canvas');
+  mc.width = 1024; mc.height = 360;
+  const mctx = mc.getContext('2d');
+  mctx.fillStyle = '#0a0a0f';
+  mctx.fillRect(0, 0, 1024, 360);
+  mctx.strokeStyle = '#D4AF37';
+  mctx.lineWidth = 6;
+  mctx.strokeRect(15, 15, 994, 330);
+  mctx.fillStyle = '#F3E2A9';
+  mctx.font = "bold 34px 'Cinzel', serif";
+  mctx.textAlign = 'center';
+  mctx.fillText("GK INSTITUTE PRESENTS", 512, 75);
+  mctx.fillStyle = '#D4AF37';
+  mctx.font = "900 88px 'Cinzel', serif";
+  mctx.fillText("FINAL CUT", 512, 190);
+  mctx.fillStyle = '#F7F1E3';
+  mctx.font = "500 28px 'Inter', sans-serif";
+  mctx.fillText("THE FAREWELL PREMIERE • CLASS OF 2026", 512, 275);
+
+  const marqueeTex = new THREE.CanvasTexture(mc);
+  const marqueeFace = new THREE.Mesh(
+    new THREE.PlaneGeometry(8.2, 2.6),
+    new THREE.MeshBasicMaterial({ map: marqueeTex, side: THREE.DoubleSide })
+  );
+  marqueeFace.position.set(0, 2.5, -0.24);
+  marqueeFace.rotation.y = Math.PI;
+  lobbyGroup.add(marqueeFace);
+
+  // Perimeter Chase Bulbs (facing camera)
+  const bulbGeo = new THREE.SphereGeometry(0.075, 12, 12);
+  const bulbCountX = 22, bulbCountY = 8;
+  for (let i = 0; i < bulbCountX; i++) {
+    const x = -4.1 + (i / (bulbCountX - 1)) * 8.2;
+    createBulb(x, 3.85, -0.28);
+    createBulb(x, 1.15, -0.28);
+  }
+  for (let j = 0; j < bulbCountY; j++) {
+    const y = 1.15 + (j / (bulbCountY - 1)) * 2.7;
+    createBulb(-4.1, y, -0.28);
+    createBulb(4.1, y, -0.28);
+  }
+
+  function createBulb(x, y, z) {
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xF3E2A9, emissive: 0xD4AF37, emissiveIntensity: 1.8, roughness: 0.2
+    });
+    const bulb = new THREE.Mesh(bulbGeo, mat);
+    bulb.position.set(x, y, z);
+    lobbyGroup.add(bulb);
+    marqueeBulbs.push(bulb);
+  }
+
+  // Marquee Spotlight from camera direction
+  const marqueeLight = new THREE.DirectionalLight(0xFFE8B5, 2.5);
+  marqueeLight.position.set(0, 4.5, -10);
+  marqueeLight.target = marqueeBox;
+  lobbyGroup.add(marqueeLight);
+
+  // Polished Lacquer Floor
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(28, 30),
+    new THREE.MeshStandardMaterial({ color: 0x08080c, roughness: 0.15, metalness: 0.85 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, -1.2, -6);
+  floor.receiveShadow = true;
+  lobbyGroup.add(floor);
+
+  scene.add(lobbyGroup);
+}
+
+// --- SCENE B: RED CARPET & STANCHIONS (Placed around Z = 52 ahead of camera Z = 42) ---
+function buildRedCarpetScene() {
+  carpetGroup = new THREE.Group();
+  carpetGroup.position.set(0, 0, 52);
+
+  // Velvet Burgundy Carpet (Rich #7A1022 with subtle emissive sheen so it never looks washed out)
+  const carpetMat = new THREE.MeshStandardMaterial({
+    color: 0x7A1022, roughness: 0.65, metalness: 0.05,
+    emissive: 0x2A050C, emissiveIntensity: 0.3
+  });
+  const carpet = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.06, 32), carpetMat);
+  carpet.position.set(0, -1.18, 0);
+  carpet.receiveShadow = true;
+  carpetGroup.add(carpet);
+
+  // Golden Edge Trims
+  const trimGeo = new THREE.BoxGeometry(0.09, 0.08, 32);
+  const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.95, roughness: 0.2 });
+  const trimL = new THREE.Mesh(trimGeo, goldTrimMat);
+  trimL.position.set(-1.74, -1.17, 0);
+  carpetGroup.add(trimL);
+  const trimR = new THREE.Mesh(trimGeo, goldTrimMat);
+  trimR.position.set(1.74, -1.17, 0);
+  carpetGroup.add(trimR);
+
+  // Brass Stanchions & Velvet Ropes
+  const stanchionGeo = new THREE.CylinderGeometry(0.045, 0.045, 1.3, 16);
+  const baseGeo = new THREE.CylinderGeometry(0.24, 0.28, 0.08, 24);
+  const finialGeo = new THREE.SphereGeometry(0.095, 16, 16);
+  const stanchionMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 1.0, roughness: 0.2 });
+  const ropeMat = new THREE.MeshStandardMaterial({ color: 0x7A1022, roughness: 0.8 });
+
+  const numStanchions = 8;
+  for (let side = -1; side <= 1; side += 2) {
+    const x = side * 1.95;
+    for (let i = 0; i < numStanchions; i++) {
+      const z = -14 + i * 4;
+      const sGroup = new THREE.Group();
+      sGroup.position.set(x, -1.2, z);
+
+      const base = new THREE.Mesh(baseGeo, stanchionMat);
+      const post = new THREE.Mesh(stanchionGeo, stanchionMat);
+      post.position.y = 0.65;
+      const finial = new THREE.Mesh(finialGeo, stanchionMat);
+      finial.position.y = 1.35;
+      sGroup.add(base, post, finial);
+      carpetGroup.add(sGroup);
+
+      if (i < numStanchions - 1) {
+        const curve = new THREE.QuadraticBezierCurve3(
+          new THREE.Vector3(x, 0.05, z),
+          new THREE.Vector3(x, -0.22, z + 2),
+          new THREE.Vector3(x, 0.05, z + 4)
+        );
+        const rope = new THREE.Mesh(new THREE.TubeGeometry(curve, 18, 0.035, 8, false), ropeMat);
+        carpetGroup.add(rope);
+      }
+    }
+  }
+
+  // Paparazzi Flashbulbs
+  for (let i = 0; i < 4; i++) {
+    const flash = new THREE.PointLight(0xFFFFFF, 0, 15);
+    flash.position.set((i % 2 === 0 ? -4 : 4), 0.8 + Math.random()*0.5, -10 + i * 6);
+    carpetGroup.add(flash);
+    flashLights.push({ light: flash, timer: Math.random() * 2 + 1 });
+  }
+
+  // Soft Warm Overhead Lighting
+  const carpetWash = new THREE.DirectionalLight(0xFFE8B0, 1.8);
+  carpetWash.position.set(0, 8, -5);
+  carpetGroup.add(carpetWash);
+
+  // Golden Statuette on Red Carpet
+  const trophyBase = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.38, 0.45, 0.65, 24),
+    new THREE.MeshStandardMaterial({ color: 0x141418, metalness: 0.8, roughness: 0.3 })
+  );
+  trophyBase.position.set(0, -0.85, 8);
+  carpetGroup.add(trophyBase);
+
+  const statuetteGroup = new THREE.Group();
+  statuetteGroup.position.set(0, -0.4, 8);
+  const statBody = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.075, 0.85, 16), stanchionMat);
+  const statHead = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), stanchionMat);
+  statHead.position.y = 0.52;
+  statuetteGroup.add(statBody, statHead);
+  carpetGroup.add(statuetteGroup);
+
+  scene.add(carpetGroup);
+}
+
+// --- SCENE C: THE CAST (HIGH-PERFORMANCE 3D CELESTIAL SPHERE at Z = 92 ahead of camera Z = 80) ---
+function buildTheCastScene() {
+  castGroup = new THREE.Group();
+  castGroup.position.set(0, 0, 92);
+
+  // Directional ambient illumination from camera direction
+  const castSun = new THREE.DirectionalLight(0xFFF0D4, 2.8);
+  castSun.position.set(0, 4, -10);
+  castGroup.add(castSun);
+
+  const castAmbient = new THREE.PointLight(0xFFE8B5, 2.5, 22);
+  castAmbient.position.set(0, 2, -6);
+  castGroup.add(castAmbient);
+
+  // 3D Spherical Constellation Group
+  castSphereGroup = new THREE.Group();
+  castSphereGroup.position.set(0, 1.4, 0);
+
+  // Radiant core light inside sphere
+  const coreLight = new THREE.PointLight(0xFFDDAA, 2.5, 12);
+  castSphereGroup.add(coreLight);
+
+  // Celestial gold orbital armillary rings around the sphere
+  const ringMat1 = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, metalness: 0.95, roughness: 0.2, emissive: 0x332505, emissiveIntensity: 0.3
+  });
+  const orbitRing1 = new THREE.Mesh(new THREE.TorusGeometry(4.35, 0.025, 16, 64), ringMat1);
+  orbitRing1.rotation.x = Math.PI / 2;
+  castSphereGroup.add(orbitRing1);
+
+  const ringMat2 = new THREE.MeshStandardMaterial({
+    color: 0xF3E2A9, metalness: 0.9, roughness: 0.2, emissive: 0x221803, emissiveIntensity: 0.2
+  });
+  const orbitRing2 = new THREE.Mesh(new THREE.TorusGeometry(4.42, 0.02, 16, 64), ringMat2);
+  orbitRing2.rotation.x = Math.PI / 3;
+  orbitRing2.rotation.y = Math.PI / 5;
+  castSphereGroup.add(orbitRing2);
+
+  // Shared Geometries & Materials for silky 60fps rendering
+  const cellGeo = new THREE.BoxGeometry(1.4, 1.8, 0.03);
+  const cellMat = new THREE.MeshStandardMaterial({ color: 0x0c0c12, metalness: 0.8, roughness: 0.2, side: THREE.DoubleSide });
+  const borderGeo = new THREE.BoxGeometry(1.46, 1.86, 0.015);
+  const borderMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.95, roughness: 0.2, side: THREE.DoubleSide });
+  const photoGeo = new THREE.PlaneGeometry(1.24, 1.48);
+
+  const textureLoader = new THREE.TextureLoader();
+  const students = CONFIG.students;
+  const count = students.length;
+  const radius = 4.15;
+  const phi = Math.PI * (3 - Math.sqrt(5)); // Golden angle
+
+  for (let i = 0; i < count; i++) {
+    const student = students[i];
+    const yNorm = 0.82 - (i / Math.max(1, count - 1)) * 1.64;
+    const radiusAtY = Math.sqrt(Math.max(0.15, 1 - yNorm * yNorm));
+    const theta = phi * i;
+
+    const x = Math.cos(theta) * radiusAtY * radius;
+    const y = yNorm * radius;
+    const z = Math.sin(theta) * radiusAtY * radius;
+
+    const frameGroup = new THREE.Group();
+    frameGroup.position.set(x, y, z);
+    frameGroup.lookAt(x * 2, y * 2, z * 2);
+
+    // Frame Base & Golden Bevel Border
+    const cellMesh = new THREE.Mesh(cellGeo, cellMat);
+    const borderMesh = new THREE.Mesh(borderGeo, borderMat);
+    borderMesh.position.z = 0.01;
+    frameGroup.add(cellMesh, borderMesh);
+
+    // Standard PBR Material with emissive map so the 3D spotlight isolates it with brilliant radiance!
+    const photoMat = new THREE.MeshStandardMaterial({
+      color: 0xFFFFFF, roughness: 0.35, metalness: 0.05,
+      emissive: 0x222222, side: THREE.DoubleSide
+    });
+
+    const optPath = CONFIG.photoBasePath + 'students/opt/' + student.file;
+    const fullPath = CONFIG.photoBasePath + 'students/' + student.file;
+
+    textureLoader.load(optPath, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      photoMat.map = tex;
+      photoMat.emissiveMap = tex;
+      photoMat.needsUpdate = true;
+    });
+
+    const photoMesh = new THREE.Mesh(photoGeo, photoMat);
+    photoMesh.position.z = 0.02;
+
+    const itemData = {
+      type: 'student',
+      title: student.name,
+      tag: 'Class 12 Star',
+      caption: student.caption || 'Star performer of Class 12, GK Institute, Patiala.',
+      imgSrc: fullPath,
+      group: frameGroup
+    };
+    photoMesh.userData = itemData;
+    cellMesh.userData = itemData;
+    borderMesh.userData = itemData;
+    frameGroup.userData = itemData;
+
+    frameGroup.add(photoMesh);
+
+    interactiveObjects.push(photoMesh, cellMesh, borderMesh);
+    castSphereGroup.add(frameGroup);
+  }
+
+  castGroup.add(castSphereGroup);
+  scene.add(castGroup);
+}
+
+// --- SCENE D: THE DIRECTORS (VELVET GALLERY WALL at Z = 130 ahead of camera Z = 118) ---
+function buildTheDirectorsScene() {
+  directorsGroup = new THREE.Group();
+  directorsGroup.position.set(0, 0, 130);
+
+  // Large Burgundy Velvet Gallery Wall (Facing camera towards -Z)
+  const wallGeo = new THREE.PlaneGeometry(28, 10);
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0x5a0c1a, roughness: 0.75, metalness: 0.05, side: THREE.DoubleSide
+  });
+  const wall = new THREE.Mesh(wallGeo, wallMat);
+  wall.position.set(0, 1.8, 0);
+  wall.rotation.y = Math.PI;
+  wall.receiveShadow = true;
+  directorsGroup.add(wall);
+
+  // Gold Crown Molding and Wainscoting
+  const moldingMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.95, roughness: 0.2, side: THREE.DoubleSide });
+  const chairRail = new THREE.Mesh(new THREE.BoxGeometry(28, 0.14, 0.14), moldingMat);
+  chairRail.position.set(0, -0.6, -0.08);
+  directorsGroup.add(chairRail);
+
+  const crownMolding = new THREE.Mesh(new THREE.BoxGeometry(28, 0.2, 0.18), moldingMat);
+  crownMolding.position.set(0, 4.2, -0.1);
+  directorsGroup.add(crownMolding);
+
+  // Dedicated Directional Light from camera side onto the Gallery Wall
+  const wallLight = new THREE.DirectionalLight(0xFFE8B5, 3.2);
+  wallLight.position.set(0, 5, -10);
+  directorsGroup.add(wallLight);
+
+  const wallWash = new THREE.PointLight(0xFFE4B5, 3.5, 25);
+  wallWash.position.set(0, 2, -5);
+  directorsGroup.add(wallWash);
+
+  // Teacher Portraits with REAL PHOTOS
+  const textureLoader = new THREE.TextureLoader();
+  const teachers = CONFIG.teachers;
+  const tCount = teachers.length;
+  const spacing = 3.8;
+
+  const frameGeo = new THREE.BoxGeometry(2.2, 2.8, 0.14);
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, metalness: 1.0, roughness: 0.2,
+    emissive: 0x332505, emissiveIntensity: 0.25, side: THREE.DoubleSide
+  });
+  const photoGeo = new THREE.PlaneGeometry(1.9, 2.5);
+  const npGeo = new THREE.BoxGeometry(1.6, 0.35, 0.05);
+  const picLightBarGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.4, 16);
+
+  for (let i = 0; i < tCount; i++) {
+    const t = teachers[i];
+    const x = (i - (tCount - 1) / 2) * spacing;
+    const pGroup = new THREE.Group();
+    pGroup.position.set(x, 1.8, -0.2);
+    pGroup.rotation.y = Math.PI; // Face towards camera (-Z)
+
+    // Ornate Gold Frame
+    const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+    pGroup.add(frameMesh);
+
+    // Standard PBR Material with emissiveMap for brilliant spotlight illumination
+    const portraitMat = new THREE.MeshStandardMaterial({
+      color: 0xFFFFFF, roughness: 0.35, metalness: 0.05,
+      emissive: 0x222222, side: THREE.DoubleSide
+    });
+
+    const optPath = CONFIG.photoBasePath + 'teachers/opt/' + t.file;
+    const fullPath = CONFIG.photoBasePath + 'teachers/' + t.file;
+
+    textureLoader.load(optPath, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      portraitMat.map = tex;
+      portraitMat.emissiveMap = tex;
+      portraitMat.needsUpdate = true;
+    });
+
+    const portraitMesh = new THREE.Mesh(photoGeo, portraitMat);
+    portraitMesh.position.z = 0.08;
+
+    const teacherData = {
+      type: 'teacher',
+      title: t.name,
+      tag: t.subject || 'Faculty of Excellence',
+      caption: t.caption || 'Guiding Class 12 with wisdom, passion, and mentorship.',
+      imgSrc: fullPath,
+      group: pGroup
+    };
+    portraitMesh.userData = teacherData;
+    pGroup.userData = teacherData;
+    frameMesh.userData = teacherData;
+
+    pGroup.add(portraitMesh);
+
+    // Engraved Brass Nameplate
+    const nameplate = new THREE.Mesh(npGeo, moldingMat);
+    nameplate.position.set(0, -1.6, 0.08);
+    nameplate.userData = teacherData;
+    pGroup.add(nameplate);
+
+    // Brass Picture Light mounted above frame
+    const picLightBar = new THREE.Mesh(picLightBarGeo, moldingMat);
+    picLightBar.rotation.z = Math.PI / 2;
+    picLightBar.position.set(0, 1.6, 0.4);
+    pGroup.add(picLightBar);
+
+    interactiveObjects.push(portraitMesh, frameMesh, nameplate);
+    directorsGroup.add(pGroup);
+  }
+
+  scene.add(directorsGroup);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 9 — MAIN SCENE INIT & THEATRICAL VELVET CURTAINS
+   ═══════════════════════════════════════════════════════════════ */
+function buildMainScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060609);
+  scene.fog = new THREE.FogExp2(0x060609, 0.016);
+
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 220);
+  camera.position.set(0, 1.2, 4.0);
+
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const pixelRatio = isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
+
+  renderer = new THREE.WebGLRenderer({
+    canvas: document.getElementById('webgl'),
+    antialias: !isMobile,
+    powerPreference: 'high-performance'
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  // Global Lighting
+  const ambientLight = new THREE.AmbientLight(0x40323a, 1.0);
+  scene.add(ambientLight);
+
+  // Table Surface & Opening Spotlight
+  envelopeSpot = new THREE.SpotLight(0xFFF2D6, 7.5, 14, Math.PI * 0.25, 0.5, 1.5);
+  envelopeSpot.position.set(1.5, 4.2, 3.5);
+  envelopeSpot.castShadow = true;
+  scene.add(envelopeSpot);
+
+  const table = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.1, 6),
+    new THREE.MeshStandardMaterial({ color: 0x0c0c12, roughness: 0.25, metalness: 0.5 })
+  );
+  table.position.y = -0.3;
+  table.receiveShadow = true;
+  scene.add(table);
+
+  // ---- ENVELOPE GROUP ----
+  envelopeGroup = new THREE.Group();
+  envelopeGroup.position.set(0, 0.3, 0);
+  envelopeGroup.rotation.x = -0.15;
+  scene.add(envelopeGroup);
+
+  const paperMat = new THREE.MeshStandardMaterial({ color: 0xF2ECE1, roughness: 0.8, metalness: 0.0 });
+  const envelopeBody = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(roundedRectShape(2.2, 1.3, 0.06), { depth: 0.1, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 3 }),
+    paperMat
+  );
+  envelopeBody.rotation.x = Math.PI / 2;
+  envelopeBody.castShadow = true;
+  envelopeGroup.add(envelopeBody);
+
+  const flapShape = new THREE.Shape();
+  flapShape.moveTo(-1.08, 0); flapShape.lineTo(0, -0.8); flapShape.lineTo(1.08, 0); flapShape.closePath();
+  flapMesh = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(flapShape, { depth: 0.015, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2 }),
+    paperMat.clone()
+  );
+  flapMesh.position.set(0, 0.055, -0.65);
+  flapMesh.rotation.x = Math.PI; // Closed
+  envelopeGroup.add(flapMesh);
+
+  // Wax Seal
+  sealGroup = new THREE.Group();
+  const waxMat = new THREE.MeshStandardMaterial({ color: 0x8B1225, roughness: 0.3, metalness: 0.2, emissive: 0x3d060e, emissiveIntensity: 0.2 });
+  const sealDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.19, 0.04, 32), waxMat);
+  sealDisc.rotation.x = Math.PI / 2;
+  sealGroup.add(sealDisc);
+  sealGroup.position.set(0, 0.08, 0);
+  envelopeGroup.add(sealGroup);
+
+  // Golden Ticket
+  ticketGroup = new THREE.Group();
+  ticketGroup.position.set(0, 0.04, 0);
+  ticketGroup.visible = false;
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, roughness: 0.25, metalness: 1.0, emissive: 0x473507, emissiveIntensity: 0.25
+  });
+  const ticketGeo = new THREE.ExtrudeGeometry(roundedRectShape(1.9, 0.95, 0.04), { depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+  ticketGeo.center();
+  const ticketMesh = new THREE.Mesh(ticketGeo, goldMat);
+  ticketGroup.add(ticketMesh);
+  envelopeGroup.add(ticketGroup);
+
+  // ---- THEATRICAL VELVET CURTAINS (Placed at Z = 1.5, facing camera at Z = 4.0) ----
+  curtainGroup = new THREE.Group();
+  curtainGroup.position.set(0, 0, 1.5);
+
+  const curtainW = 4.8, curtainH = 6.2;
+  const velvetMat = new THREE.MeshStandardMaterial({
+    color: 0x8B1225, roughness: 0.45, metalness: 0.1,
+    emissive: 0x4A0812, emissiveIntensity: 0.4, side: THREE.DoubleSide
+  });
+
+  const leftGeo = createCurtainGeometry(curtainW, curtainH);
+  leftCurtain = new THREE.Mesh(leftGeo, velvetMat);
+  leftCurtain.position.set(-curtainW/2 + 0.1, curtainH/2 - 1.0, 0);
+  curtainGroup.add(leftCurtain);
+
+  const rightGeo = createCurtainGeometry(curtainW, curtainH);
+  rightCurtain = new THREE.Mesh(rightGeo, velvetMat.clone());
+  rightCurtain.position.set(curtainW/2 - 0.1, curtainH/2 - 1.0, 0);
+  curtainGroup.add(rightCurtain);
+
+  // Ornate Gold Valance
+  const pelmet = new THREE.Mesh(
+    new THREE.BoxGeometry(10, 0.65, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.95, roughness: 0.25, side: THREE.DoubleSide })
+  );
+  pelmet.position.set(0, curtainH - 1.0, 0.15);
+  curtainGroup.add(pelmet);
+
+  // Dedicated Curtain Stage Footlight and Overhead Illumination
+  curtainLight = new THREE.DirectionalLight(0xFFE8B5, 3.5);
+  curtainLight.position.set(0, 2.5, 2.5);
+  curtainGroup.add(curtainLight);
+
+  curtainAmb = new THREE.PointLight(0xFFD700, 4.0, 10);
+  curtainAmb.position.set(0, -0.5, 1.5);
+  curtainGroup.add(curtainAmb);
+
+  curtainGroup.visible = false;
+  scene.add(curtainGroup);
+
+  // Build All 4 Scenes along Rail
+  buildLobbyScene();
+  buildRedCarpetScene();
+  buildTheCastScene();
+  buildTheDirectorsScene();
+
+  
+  // Theatrical 3D Isolation Spotlight & Volumetric Beam
+  isolationSpot = new THREE.SpotLight(0xFFF6DE, 0, 32, Math.PI * 0.24, 0.35, 1.2);
+  spotlightTargetObj = new THREE.Object3D();
+  scene.add(spotlightTargetObj);
+  isolationSpot.target = spotlightTargetObj;
+  isolationSpot.castShadow = true;
+  scene.add(isolationSpot);
+
+  // Volumetric Translucent Gold Light Cone
+  const beamGeo = new THREE.ConeGeometry(1.6, 6.0, 32, 1, true);
+  beamGeo.translate(0, -3.0, 0); // Origin at tip
+  beamGeo.rotateX(Math.PI / 2); // Point along +Z
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: 0xFFE8B5, transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false
+  });
+  volumetricBeam = new THREE.Mesh(beamGeo, beamMat);
+  scene.add(volumetricBeam);
+
+  // Floating Cinema Dust Particles
+  const dustCount = 300;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(dustCount * 3);
+  for (let i = 0; i < dustCount * 3; i += 3) {
+    dustPos[i] = (Math.random() - 0.5) * 16;
+    dustPos[i+1] = Math.random() * 6 - 1;
+    dustPos[i+2] = Math.random() * 140;
+  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  dustParticles = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+    color: 0xF3E2A9, size: 0.02, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending
+  }));
+  scene.add(dustParticles);
+
+  // ---- POST-PROCESSING PIPELINE ----
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.35, 0.5, 0.85
+  );
+  composer.addPass(bloomPass);
+
+  const VignetteShader = {
+    uniforms: { tDiffuse: { value: null }, uDarkness: { value: 1.25 }, uOffset: { value: 1.05 } },
+    vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float uDarkness; uniform float uOffset; varying vec2 vUv;
+      void main(){
+        vec4 col = texture2D(tDiffuse, vUv);
+        float dist = length(vUv - 0.5);
+        float vig = smoothstep(0.5 * uOffset, 0.5 * uOffset - 0.45, dist);
+        col.rgb *= mix(1.0 - uDarkness * 0.5, 1.0, vig);
+        gl_FragColor = col;
+      }`
+  };
+  composer.addPass(new ShaderPass(VignetteShader));
+  composer.addPass(new OutputPass());
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 10 — STATE TRANSITIONS & THEATRICAL REVEAL
+   ═══════════════════════════════════════════════════════════════ */
+function transitionTo(state) {
+  currentState = state;
+
+  switch(state) {
+    case STATE.ENVELOPE_IDLE:
+      $loader.classList.add('fade-out');
+      setTimeout(() => { $loader.style.display = 'none'; }, 850);
+      $skip.classList.add('visible');
+      setTimeout(() => {
+        $prompt.classList.add('visible');
+        $prompt.textContent = "Tap the envelope";
+      }, 700);
+      break;
+
+    case STATE.SEAL_BREAKING:
+      audio.playChime(420, 0.5);
+      $prompt.classList.remove('visible');
+      springs.sealBreak.set(1);
+      setTimeout(() => transitionTo(STATE.FLAP_OPENING), 450);
+      break;
+
+    case STATE.FLAP_OPENING:
+      springs.flapAngle.set(-Math.PI * 0.72);
+      setTimeout(() => transitionTo(STATE.TICKET_SLIDING), 600);
+      break;
+
+    case STATE.TICKET_SLIDING:
+      ticketGroup.visible = true;
+      audio.playChime(650, 0.8);
+      springs.ticketSlide.set(1);
+      setTimeout(() => transitionTo(STATE.TICKET_IDLE), 800);
+      break;
+
+    case STATE.TICKET_IDLE:
+      $prompt.textContent = "Tap the ticket";
+      $prompt.classList.add('visible');
+      break;
+
+    case STATE.TICKET_FLIPPED:
+      audio.playChime(880, 0.9);
+      $prompt.classList.remove('visible');
+      springs.ticketFlip.set(Math.PI);
+      setTimeout(() => { $ticketOvl.classList.add('visible'); }, 500);
+      break;
+
+    case STATE.CURTAINS_PARTING:
+      $ticketOvl.classList.remove('visible');
+      $lbTop.classList.add('active');
+      $lbBottom.classList.add('active');
+      audio.playChime(520, 0.8);
+
+      // Turn off envelope spot so it doesn't wash out later scenes
+      envelopeSpot.intensity = 0;
+
+      // Curtains visible at Z = 1.5, envelope hides
+      curtainGroup.visible = true;
+      envelopeGroup.visible = false;
+
+      // Curtains smoothly part wide
+      springs.curtainOpen.set(1);
+
+      // Allow user to witness the parting curtains, then camera glides through into Lobby
+      setTimeout(() => {
+        springs.cameraFly.set(1);
+      }, 1000);
+
+      // Once camera reaches Lobby at Z = 10, enter Scroll World
+      setTimeout(() => {
+        transitionTo(STATE.SCROLL_WORLD);
+      }, 3400);
+      break;
+
+    case STATE.SCROLL_WORLD:
+      curtainGroup.visible = false;
+      $skip.classList.remove('visible');
+      $hud.classList.add('visible');
+      $sceneOverlays.classList.add('visible');
+      $scrollContainer.classList.add('interactive');
+      updateSceneOverlays(0);
+      break;
+  }
+}
+
+function skipIntro() {
+  audio.playChime(800, 0.4);
+  $loader.style.display = 'none';
+  $prompt.classList.remove('visible');
+  $ticketOvl.classList.remove('visible');
+  envelopeSpot.intensity = 0;
+  envelopeGroup.visible = false;
+  curtainGroup.visible = false;
+  transitionTo(STATE.SCROLL_WORLD);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 11 — CAMERA RAIL & SCENE COORDINATION
+   ═══════════════════════════════════════════════════════════════ */
+const CHAPTERS = [
+  { name: 'Lobby',         z: 10,  lookY: 2.2, overlay: 'overlay-lobby' },
+  { name: 'Red Carpet',    z: 42,  lookY: 1.0, overlay: 'overlay-carpet' },
+  { name: 'The Cast',      z: 80,  lookY: 1.4, overlay: 'overlay-cast' },
+  { name: 'The Directors', z: 118, lookY: 1.8, overlay: 'overlay-directors' }
+];
+
+function updateSceneOverlays(p) {
+  $scrollBar.style.width = `${p * 100}%`;
+
+  const chapIndex = Math.min(3, Math.floor(p * 4));
+  chapBtns.forEach((btn, idx) => {
+    btn.classList.toggle('active', idx === chapIndex);
+  });
+
+  document.querySelectorAll('.scene-overlay').forEach(el => el.classList.remove('active'));
+  const activeOverlayId = CHAPTERS[chapIndex]?.overlay;
+  if (activeOverlayId) {
+    document.getElementById(activeOverlayId)?.classList.add('active');
+  }
+
+  if (chapIndex === 3) {
+    $lbTop.classList.add('deep');
+    $lbBottom.classList.add('deep');
+  } else {
+    $lbTop.classList.remove('deep');
+    $lbBottom.classList.remove('deep');
+  }
+}
+
+function scrollToChapter(idx) {
+  const targetZ = idx / 3;
+  const maxScroll = $scrollContainer.scrollHeight - window.innerHeight;
+  $scrollContainer.scrollTo({ top: targetZ * maxScroll, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 12 — EVENT LISTENERS & POINTER INTERACTION
+   ═══════════════════════════════════════════════════════════════ */
+function onPointerDown(e) {
+  if (e.target.closest('#inspect-modal') || e.target.closest('#hud') || e.target.closest('#ticket-overlay') || e.target.closest('.awards-box') || e.target.closest('.lobby-box') || e.target.closest('.carpet-box')) return;
+
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  if (currentState === STATE.ENVELOPE_IDLE) {
+    const hits = raycaster.intersectObject(envelopeGroup, true);
+    if (hits.length > 0) transitionTo(STATE.SEAL_BREAKING);
+  } else if (currentState === STATE.TICKET_IDLE) {
+    const hits = raycaster.intersectObject(ticketGroup, true);
+    if (hits.length > 0) transitionTo(STATE.TICKET_FLIPPED);
+  } else if (currentState === STATE.SCROLL_WORLD) {
+    const hits = raycaster.intersectObjects(interactiveObjects, true);
+    if (hits.length > 0) {
+      let found = null;
+      for (let h of hits) {
+        let cur = h.object;
+        while (cur && (!cur.userData || !cur.userData.title) && cur.parent && cur !== scene) {
+          cur = cur.parent;
+        }
+        if (cur && cur.userData && cur.userData.title) {
+          found = cur.userData;
+          break;
+        }
+      }
+      if (found) {
+        openInspectModal(found);
+      }
+    }
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   THEATRICAL ISOLATION SPOTLIGHT & FRAME LIFT
+   ═══════════════════════════════════════════════════════════════ */
+function triggerSpotlightOnFrame(itemData) {
+  if (!itemData || !itemData.group) return;
+  const grp = itemData.group;
+  activeSpotlitGroup = grp;
+
+  // World position of target frame
+  const worldPos = new THREE.Vector3();
+  grp.getWorldPosition(worldPos);
+
+  // Focus spotlight target on the frame
+  spotlightTargetObj.position.copy(worldPos);
+
+  // Position the physical spotlight 4.5 units in front and 1.8 units above the frame
+  const camDir = new THREE.Vector3().subVectors(camera.position, worldPos).normalize();
+  const spotSourcePos = new THREE.Vector3().copy(worldPos).addScaledVector(camDir, 5.0).add(new THREE.Vector3(0, 1.8, 0));
+  isolationSpot.position.copy(spotSourcePos);
+
+  // Position and orient volumetric beam
+  if (volumetricBeam) {
+    volumetricBeam.position.copy(spotSourcePos);
+    volumetricBeam.lookAt(worldPos);
+  }
+
+  // Animate spotlight intensity and spring lift
+  springs.spotlightPower.set(1);
+
+  // Frame lifts forward along its local normal with spring anticipation
+  if (!grp.userData.origPos) {
+    grp.userData.origPos = grp.position.clone();
+  }
+  const liftDir = grp.position.clone().normalize();
+  grp.position.copy(grp.userData.origPos).addScaledVector(liftDir, 0.45);
+}
+
+function dismissSpotlight() {
+  springs.spotlightPower.set(0);
+  if (activeSpotlitGroup && activeSpotlitGroup.userData.origPos) {
+    activeSpotlitGroup.position.copy(activeSpotlitGroup.userData.origPos);
+    activeSpotlitGroup = null;
+  }
+}
+
+function openInspectModal(data) {
+  triggerSpotlightOnFrame(data);
+  audio.playChime(620, 0.4);
+  $modalImg.src = data.imgSrc;
+  $modalName.textContent = data.title;
+  $modalTag.textContent = data.tag;
+  $modalCaption.textContent = data.caption;
+  $inspectModal.classList.add('visible');
+}
+
+function closeInspectModal() {
+  dismissSpotlight();
+  $inspectModal.classList.remove('visible');
+}
+
+function updateCountdown() {
+  const eventDate = new Date(CONFIG.event.isoStart).getTime();
+  const now = new Date().getTime();
+  const diff = Math.max(0, eventDate - now);
+
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+  document.getElementById('cd-days').textContent = d.toString().padStart(2, '0');
+  document.getElementById('cd-hours').textContent = h.toString().padStart(2, '0');
+  document.getElementById('cd-mins').textContent = m.toString().padStart(2, '0');
+  document.getElementById('cd-secs').textContent = s.toString().padStart(2, '0');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 13 — MAIN ANIMATION LOOP (60 FPS TARGET)
+   ═══════════════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.08);
+  const elapsed = clock.getElapsedTime();
+
+  Object.values(springs).forEach(s => s.update(dt));
+
+  // Stage 0: Loader
+  if (currentState === STATE.LOADING) {
+    filmLeader.update(dt, Math.min(1, elapsed / 2.6));
+    filmLeader.draw(Math.min(1, elapsed / 2.6));
+    $loaderBar.style.width = `${Math.min(100, (elapsed / 2.6) * 100)}%`;
+    if (filmLeader.done) transitionTo(STATE.ENVELOPE_IDLE);
+    return;
+  }
+
+  // Stage 1: Envelope Idle Animation
+  if (envelopeGroup.visible) {
+    envelopeGroup.position.y = 0.3 + Math.sin(elapsed * 1.4) * 0.03;
+    envelopeGroup.rotation.z = Math.sin(elapsed * 0.9) * 0.01;
+
+    if (springs.sealBreak.value > 0.02) {
+      const v = springs.sealBreak.value;
+      sealGroup.scale.set(1 - v * 0.7, 1 - v * 0.7, 1 - v * 0.7);
+      sealGroup.position.y = 0.08 + v * 0.3;
+      if (v > 0.85) sealGroup.visible = false;
+    }
+
+    flapMesh.rotation.x = Math.PI + springs.flapAngle.value;
+
+    if (ticketGroup.visible) {
+      const slide = springs.ticketSlide.value;
+      ticketGroup.position.y = 0.04 + slide * 1.15;
+      ticketGroup.position.z = slide * 0.25;
+      ticketGroup.rotation.y = springs.ticketFlip.value;
+    }
+  }
+
+  // Curtains Parting
+  if (curtainGroup.visible && springs.curtainOpen.value > 0.001) {
+    const p = springs.curtainOpen.value;
+    updateCurtainMesh(leftCurtain.geometry, p, -1);
+    updateCurtainMesh(rightCurtain.geometry, p, 1);
+  }
+
+  // Camera Fly Transition into Scroll World
+  if (currentState === STATE.CURTAINS_PARTING) {
+    const flyP = springs.cameraFly.value;
+    camera.position.z = THREE.MathUtils.lerp(4.0, 10, flyP);
+    camera.position.y = THREE.MathUtils.lerp(1.2, 1.8, flyP);
+    camera.lookAt(0, 1.8, THREE.MathUtils.lerp(1.5, 24, flyP));
+  }
+
+  // Stage 2: Scroll World Rail Camera
+  if (currentState === STATE.SCROLL_WORLD) {
+    const maxScroll = $scrollContainer.scrollHeight - window.innerHeight;
+    const currentScroll = $scrollContainer.scrollTop;
+    const targetProgress = maxScroll > 0 ? currentScroll / maxScroll : 0;
+    springs.scrollLerp.set(targetProgress);
+
+    const p = springs.scrollLerp.value;
+    updateSceneOverlays(p);
+
+    const minZ = CHAPTERS[0].z, maxZ = CHAPTERS[3].z;
+    const currentCamZ = THREE.MathUtils.lerp(minZ, maxZ, p);
+
+    camera.position.z = currentCamZ;
+    camera.position.x = Math.sin(p * Math.PI * 2) * 0.5;
+    camera.position.y = 1.6 + Math.sin(p * Math.PI * 2) * 0.25;
+    camera.lookAt(0, 1.6, currentCamZ + 14);
+
+    // Marquee bulbs chase sequence
+    const chaseStep = Math.floor(elapsed * 10) % 3;
+    marqueeBulbs.forEach((bulb, idx) => {
+      const on = (idx % 3) === chaseStep;
+      bulb.material.emissiveIntensity = on ? 2.2 : 0.3;
+    });
+
+    // Paparazzi Flashbulbs (Safe intensity, no blowout)
+    flashLights.forEach(f => {
+      f.timer -= dt;
+      if (f.timer <= 0) {
+        f.light.intensity = 4.5;
+        audio.playShutter();
+        f.timer = Math.random() * 2.5 + 1.2;
+      } else {
+        f.light.intensity *= 0.85;
+      }
+    });
+
+    // Celestial 3D Sphere Rotation for The Cast
+    if (castSphereGroup) {
+      castSphereGroup.rotation.y = elapsed * 0.18 + sphereRotationOffset.y;
+      castSphereGroup.rotation.x = Math.sin(elapsed * 0.35) * 0.08 + sphereRotationOffset.x;
+    }
+
+
+
+
+    // Pendulum sway for Directors frames
+    if (directorsGroup) {
+      directorsGroup.children.forEach((child, idx) => {
+        if (child instanceof THREE.Group) {
+          child.rotation.z = Math.sin(elapsed * 0.75 + idx) * 0.012;
+        }
+      });
+    }
+  }
+
+  // Floating Cinema Dust
+  if (dustParticles) {
+    const pos = dustParticles.geometry.attributes.position;
+    for (let i = 1; i < pos.count * 3; i += 3) {
+      pos.array[i] += dt * 0.06;
+      if (pos.array[i] > 6) pos.array[i] = -1;
+    }
+    dustParticles.geometry.attributes.position.needsUpdate = true;
+  }
+
+  
+  // Update Theatrical Isolation Spotlight & Volumetric Beam
+  if (isolationSpot) {
+    const p = springs.spotlightPower.value;
+    isolationSpot.intensity = p * 12.0;
+    if (volumetricBeam) {
+      volumetricBeam.material.opacity = p * 0.28;
+    }
+  }
+
+  composer.render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 14 — INIT & 2D FALLBACK
+   ═══════════════════════════════════════════════════════════════ */
+function hasWebGL() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl')));
+  } catch(e) { return false; }
+}
+
+function populateFallback() {
+  const castContainer = document.getElementById('fallback-cast-gallery');
+  if (castContainer) {
+    castContainer.innerHTML = CONFIG.students.map(s => `
+      <div class="fallback-thumb">
+        <img src="${CONFIG.photoBasePath}students/opt/${s.file}" alt="${s.name}" loading="lazy">
+        <div style="padding:0.4rem;font-size:0.75rem;color:var(--gold-light);text-align:center;">${s.name}</div>
+      </div>
+    `).join('');
+  }
+  const teacherContainer = document.getElementById('fallback-teachers-gallery');
+  if (teacherContainer) {
+    teacherContainer.innerHTML = CONFIG.teachers.map(t => `
+      <div class="fallback-thumb">
+        <img src="${CONFIG.photoBasePath}teachers/opt/${t.file}" alt="${t.name}" loading="lazy">
+        <div style="padding:0.4rem;font-size:0.75rem;color:var(--gold-light);text-align:center;">${t.name}</div>
+        <div style="font-size:0.65rem;color:var(--ivory-muted);text-align:center;">${t.subject}</div>
+      </div>
+    `).join('');
+  }
+}
+
+function init() {
+  if (!hasWebGL()) {
+    $loader.style.display = 'none';
+    document.getElementById('fallback').classList.add('active');
+    populateFallback();
+    return;
+  }
+
+  filmLeader = new FilmLeader(document.getElementById('leader-canvas'));
+  buildMainScene();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    filmLeader.resize();
+  });
+
+
+  // Interactive Pointer Drag to Orbit the Cast Sphere
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('#inspect-modal') || e.target.closest('#hud') || e.target.closest('#ticket-overlay')) return;
+    isPointerDragging = true;
+    lastPointerPos.x = e.clientX;
+    lastPointerPos.y = e.clientY;
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (!isPointerDragging) return;
+    const dx = e.clientX - lastPointerPos.x;
+    const dy = e.clientY - lastPointerPos.y;
+    lastPointerPos.x = e.clientX;
+    lastPointerPos.y = e.clientY;
+
+    sphereRotationOffset.y += dx * 0.005;
+    sphereRotationOffset.x += dy * 0.005;
+  });
+
+  window.addEventListener('pointerup', () => {
+    isPointerDragging = false;
+  });
+
+  window.addEventListener('pointerdown', onPointerDown);
+  $enterBtn.addEventListener('click', () => transitionTo(STATE.CURTAINS_PARTING));
+  $skip.addEventListener('click', skipIntro);
+  $modalClose.addEventListener('click', closeInspectModal);
+  $inspectModal.addEventListener('click', (e) => {
+    if (e.target === $inspectModal) closeInspectModal();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeInspectModal();
+  });
+
+  $soundBtn.addEventListener('click', () => {
+    const active = audio.toggle();
+    $soundIconOff.style.display = active ? 'none' : 'block';
+    $soundIconOn.style.display = active ? 'block' : 'none';
+  });
+
+  chapBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.chapter, 10);
+      scrollToChapter(idx);
+    });
+  });
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  animate();
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RSVP & CALENDAR GENERATION LOGIC
+   ═══════════════════════════════════════════════════════════════ */
+const $rsvpModal = document.getElementById('rsvp-modal');
+const $openRsvpBtn = document.getElementById('open-rsvp-btn');
+const $openRsvpDirBtn = document.getElementById('open-rsvp-directors-btn');
+const $closeRsvpBtn = document.getElementById('rsvp-close');
+const $rsvpForm = document.getElementById('rsvp-form');
+const $rsvpFormView = document.getElementById('rsvp-form-view');
+const $rsvpTicketView = document.getElementById('rsvp-ticket-view');
+const $confirmedCounter = document.getElementById('confirmed-counter');
+const $ticketGuestName = document.getElementById('ticket-guest-name');
+const $ticketSeatNo = document.getElementById('ticket-seat-no');
+const $ticketGradeVal = document.getElementById('ticket-grade-val');
+const $gcalLink = document.getElementById('gcal-link');
+const $downloadIcsBtn = document.getElementById('download-ics-btn');
+const $rsvpDoneBtn = document.getElementById('rsvp-done-btn');
+
+function loadRsvps() {
+  try {
+    const data = localStorage.getItem('premiere_rsvps');
+    return data ? JSON.parse(data) : [];
+  } catch(e) { return []; }
+}
+
+function updateRsvpCounter() {
+  const rsvps = loadRsvps();
+  const baseCount = 28;
+  if ($confirmedCounter) $confirmedCounter.textContent = baseCount + rsvps.length;
+}
+
+window.openRsvp = openRsvp;
+window.closeRsvp = closeRsvp;
+function openRsvp() {
+  audio.playChime(620, 0.4);
+  $rsvpFormView.style.display = 'block';
+  $rsvpTicketView.classList.remove('active');
+  $rsvpModal.classList.add('visible');
+}
+
+function closeRsvp() {
+  $rsvpModal.classList.remove('visible');
+}
+
+function generateGCalUrl(name) {
+  const title = encodeURIComponent("Final Cut: The Farewell Premiere (Class 12)");
+  const details = encodeURIComponent("Farewell Premiere for Class 12 hosted by Class 11 at GK Institute. Guest: " + name);
+  const location = encodeURIComponent("GK Institute of Commerce, Patiala");
+  const dates = "20261120T073000Z/20261120T123000Z"; // 1:00 PM - 6:00 PM IST (UTC +5:30)
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+}
+
+function downloadIcsFile(name) {
+  const icsData = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//GK Institute Patiala//Final Cut Farewell Premiere//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:farewell-premiere-" + Date.now() + "@gkinstitute.edu",
+    "DTSTAMP:20261115T000000Z",
+    "DTSTART:20261120T073000Z",
+    "DTEND:20261120T123000Z",
+    "SUMMARY:Final Cut: The Farewell Premiere",
+    "DESCRIPTION:The Farewell Premiere for Class 12 hosted by Class 11 at GK Institute of Commerce, Patiala.\nGuest: " + name + "",
+    "LOCATION:GK Institute of Commerce, Patiala",
+    "STATUS:CONFIRMED",
+    "BEGIN:VALARM",
+    "TRIGGER:-P1D",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:Final Cut Premiere Tomorrow!",
+    "END:VALARM",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT2H",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:Final Cut Premiere starts in 2 hours!",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+
+  const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "Final_Cut_Farewell_Pass.ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+if ($openRsvpBtn) $openRsvpBtn.addEventListener('click', openRsvp);
+if ($openRsvpDirBtn) $openRsvpDirBtn.addEventListener('click', openRsvp);
+if ($closeRsvpBtn) $closeRsvpBtn.addEventListener('click', closeRsvp);
+if ($rsvpDoneBtn) $rsvpDoneBtn.addEventListener('click', closeRsvp);
+if ($rsvpModal) {
+  $rsvpModal.addEventListener('click', (e) => {
+    if (e.target === $rsvpModal) closeRsvp();
+  });
+}
+
+if ($rsvpForm) {
+  $rsvpForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('rsvp-name').value.trim();
+    const className = document.getElementById('rsvp-class').value.trim();
+    const grade = document.getElementById('rsvp-grade').value;
+    const song = document.getElementById('rsvp-song').value.trim();
+    const perform = document.getElementById('rsvp-perform').checked;
+
+    const rsvps = loadRsvps();
+    const rowLetters = ['A', 'B', 'C', 'D', 'E'];
+    const row = rowLetters[rsvps.length % rowLetters.length];
+    const seatNum = (rsvps.length % 16) + 1;
+    const seatAlloc = `Row ${row} &bull; Seat ${seatNum.toString().padStart(2, '0')}`;
+
+    const record = { name, className, grade, song, perform, seat: seatAlloc, date: new Date().toISOString() };
+    rsvps.push(record);
+    try { localStorage.setItem('premiere_rsvps', JSON.stringify(rsvps)); } catch(err) {}
+
+    audio.playChime(880, 0.7);
+    updateRsvpCounter();
+
+    // Format WhatsApp message to 7986246076
+    const phone = '917986246076';
+    const roleText = grade === '12' ? 'Class 12 Senior Star ⭐' : 'Class 11 Host 🎬';
+    const performText = perform ? 'Yes! Performing on stage 🎤' : 'Attending in the audience ✨';
+    const songText = song || 'None';
+
+    const waMsg = `🎬 *FINAL CUT: FAREWELL PREMIERE RSVP* 🎬\n\n` +
+      `👤 *Guest Name:* ${name}\n` +
+      `🏫 *Class & Section:* ${className}\n` +
+      `🎓 *Role:* ${roleText}\n` +
+      `🎵 *Song Request:* ${songText}\n` +
+      `🎭 *Stage Performance:* ${performText}\n` +
+      
+      `📍 *Venue:* GK Institute of Commerce, Patiala\n` +
+      `📅 *Date:* 20 November 2026 • 1:00 PM – 6:00 PM\n` +
+      `✨ *Status:* Confirmed RSVP`;
+
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}`;
+
+    const $waBtn = document.getElementById('whatsapp-btn');
+    if ($waBtn) $waBtn.href = waUrl;
+
+    // Automatically trigger WhatsApp in new tab
+    window.open(waUrl, '_blank');
+
+    // Populate ticket
+    $ticketGuestName.textContent = name;
+    $ticketSeatNo.innerHTML = seatAlloc;
+    $ticketGradeVal.textContent = grade === '12' ? 'Class 12 VIP Star' : 'Class 11 Host';
+    $gcalLink.href = generateGCalUrl(name);
+
+    $downloadIcsBtn.onclick = () => downloadIcsFile(name, '');
+
+    $rsvpFormView.style.display = 'none';
+    $rsvpTicketView.classList.add('active');
+  });
+}
+
+updateRsvpCounter();
+
+init();
+</script>
+
+
+</body></html>
