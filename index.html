@@ -873,12 +873,14 @@ const CONFIG = {
   ],
 
   teachers: [
-    { file: 'IMG_20261114_162701_695.jpg',         name: 'Mr Yuvraj Singdh',  subject: 'Business Studies', caption: 'Balancing every ledger, guiding every ambition with wisdom.' },
+    { file: 'IMG_20261114_162701_695.jpg',         name: 'Mr Yuvraj Singh',  subject: 'Business Studies', caption: 'Balancing every ledger, guiding every ambition with wisdom.' },
     { file: '20261114_195034~3.jpg',               name: 'Ms Rajni',       subject: 'Business Studies',       caption: 'Teaching the strategy of leadership and lifelong integrity.' },
     { file: 'Screenshot_20261111_225257_Instagram.jpg',   name: 'Mrs. Richa Jindal',             subject: 'Accountancy',   caption: 'Balancing every ledger, guiding every ambition with wisdom.' },
     { file: 'Screenshot_20261111_230327_Instagram~2.jpg', name: 'Mrs Bharti Raina',             subject: 'Economics', caption: 'Solving every curve, guiding every ambition with wisdom..' },
     { file: 'Screenshot_20261111_230648_Instagram~3.jpg', name: 'Mr Amit Mittal',            subject: 'Mathematics',         caption: 'Proving Formulas and intellectual courage.' },
-    { file: 'Screenshot_20261114_204434_Instagram~2.jpg',   name: 'Mr Abhilash Kapoor', subject: 'Accountancy', caption: 'Balancing every ledger, guiding every ambition with wisdom' }
+    { file: 'Screenshot_20261114_204434_Instagram~2.jpg',   name: 'Mr Abhilash Kapoor', subject: 'Accountancy', caption: 'Balancing every ledger, guiding every ambition with wisdom' },
+    { file: 'director_new_1.jpg',                  name: 'Faculty of Excellence', subject: 'Faculty of Commerce', caption: 'Guiding every student toward excellence with devotion.' },
+    { file: 'director_new_2_singh.jpg',            name: 'Faculty of Excellence', subject: 'Faculty of Commerce', caption: 'Inspiring future leaders with honor and dedication.' }
   ],
 
   photoBasePath: './public/photos/'
@@ -1562,7 +1564,7 @@ function buildTheDirectorsScene() {
   directorsCarousel = new THREE.Group();
   directorsGroup.add(directorsCarousel);
 
-  const radius = 4.8;
+  const radius = 5.4;
   const moldingMat = new THREE.MeshStandardMaterial({
     color: 0xD4AF37, metalness: 0.95, roughness: 0.18, side: THREE.DoubleSide
   });
