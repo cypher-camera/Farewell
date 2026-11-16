@@ -554,7 +554,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
     <div class="subtitle">The Farewell Premiere</div>
     <div class="divider"></div>
     <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">20 November 2026</span></div>
-    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">1:00 PM – 6:00 PM</span></div>
+    <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">12:00 PM Onwards</span></div>
     <div class="detail-row"><span class="detail-label">Venue</span><span class="detail-val">GK Institute of Commerce</span></div>
     <div class="detail-row"><span class="detail-label">Hosted By</span><span class="detail-val">Class 11</span></div>
     <div class="detail-row"><span class="detail-label">Honoring</span><span class="detail-val">Class 12 Stars</span></div>
@@ -609,7 +609,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
         <div class="countdown-item"><div class="countdown-num" id="cd-secs">--</div><div class="countdown-lbl">Secs</div></div>
       </div>
       <div class="lobby-venue">
-        Friday, 20 November 2026 • 1:00 PM – 6:00 PM IST
+        Friday, 20 November 2026 • 12:00 PM Onwards
         <span>GK Institute of Commerce, Patiala</span>
       </div>
       <a href="https://www.google.com/maps/search/GK+Institute+of+Commerce+Patiala" target="_blank" rel="noopener noreferrer" class="btn-gold">
@@ -762,7 +762,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
         <div class="pass-grid">
           <div><div class="pass-item-label">Guest</div><div class="pass-item-val" id="ticket-guest-name">Guest Name</div></div>
           
-          <div><div class="pass-item-label">Date & Time</div><div class="pass-item-val">20 Nov &bull; 1:00 PM</div></div>
+          <div><div class="pass-item-label">Date & Time</div><div class="pass-item-val">20 Nov &bull; 12:00 PM Onwards</div></div>
           <div><div class="pass-item-label">Pass Type</div><div class="pass-item-val" id="ticket-grade-val">Class 12 VIP</div></div>
         </div>
         <div style="font-size:0.75rem;color:var(--gold-light);letter-spacing:0.12em;">HONORING THE CLASS OF 2026</div>
@@ -799,7 +799,7 @@ canvas#webgl{position:fixed;inset:0;width:100%;height:100%;z-index:1;display:blo
   <div class="fallback-card">
     <h2>Event Particulars</h2>
     <p>📅 <strong>Date:</strong> 20 November 2026</p>
-    <p>🕐 <strong>Time:</strong> 1:00 PM – 6:00 PM (Asia/Kolkata)</p>
+    <p>🕐 <strong>Time:</strong> 12:00 PM Onwards</p>
     <p>📍 <strong>Venue:</strong> GK Institute of Commerce, Patiala</p>
     <p>🎬 <strong>Hosted by:</strong> Class 11</p>
       </div>
@@ -843,9 +843,8 @@ const CONFIG = {
     title: 'Final Cut: The Farewell Premiere',
     school: 'GK Institute, Patiala',
     date: '2026-11-20',
-    startTime: '13:00',
-    endTime: '18:00',
-    isoStart: '2026-11-20T13:00:00+05:30',
+    startTime: '12:00 PM Onwards',
+    isoStart: '2026-11-20T12:00:00+05:30',
     timezone: 'Asia/Kolkata',
     venue: 'GK Institute of Commerce, Patiala',
     mapsLink: 'https://www.google.com/maps/search/GK+Institute+of+Commerce+Patiala',
@@ -2578,7 +2577,7 @@ function generateGCalUrl(name) {
   const title = encodeURIComponent("Final Cut: The Farewell Premiere (Class 12)");
   const details = encodeURIComponent("Farewell Premiere for Class 12 hosted by Class 11 at GK Institute. Guest: " + name);
   const location = encodeURIComponent("GK Institute of Commerce, Patiala");
-  const dates = "20261120T073000Z/20261120T123000Z"; // 1:00 PM - 6:00 PM IST (UTC +5:30)
+  const dates = "20261120T063000Z/20261120T123000Z"; // 12:00 PM Onwards (IST UTC +5:30)
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
 }
 
@@ -2592,7 +2591,7 @@ function downloadIcsFile(name) {
     "BEGIN:VEVENT",
     "UID:farewell-premiere-" + Date.now() + "@gkinstitute.edu",
     "DTSTAMP:20261115T000000Z",
-    "DTSTART:20261120T073000Z",
+    "DTSTART:20261120T063000Z",
     "DTEND:20261120T123000Z",
     "SUMMARY:Final Cut: The Farewell Premiere",
     "DESCRIPTION:The Farewell Premiere for Class 12 hosted by Class 11 at GK Institute of Commerce, Patiala.\nGuest: " + name + "",
@@ -2669,7 +2668,7 @@ if ($rsvpForm) {
       `🎭 *Stage Performance:* ${performText}\n` +
       
       `📍 *Venue:* GK Institute of Commerce, Patiala\n` +
-      `📅 *Date:* 20 November 2026 • 1:00 PM – 6:00 PM\n` +
+      `📅 *Date & Time:* 20 November 2026 • 12:00 PM Onwards\n` +
       `✨ *Status:* Confirmed RSVP`;
 
     const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(waMsg)}`;
